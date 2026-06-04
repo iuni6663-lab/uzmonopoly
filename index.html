@@ -2,514 +2,331 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Mini Premium — Ultimate Edition</title>
-    <!-- Tailwind CSS SDK -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        darkBg: '#05070f',
-                        darkSurface: '#0d1121',
-                        premiumGold: '#f59e0b',
-                        premiumPurple: '#6366f1'
-                    },
-                    animation: {
-                        'dice-spin': 'spin 0.4s ease-in-out infinite',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'float': 'float 4s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-6px)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Google Typography -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadidlar: Yashirin Ma’rifat</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: radial-gradient(circle at 50% 0%, #131233 0%, #060814 70%, #020308 100%);
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
+            font-family: 'Space Grotesk', sans-serif;
         }
-        .glass-panel {
-            background: rgba(13, 17, 33, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+        .serif-title {
+            font-family: 'Playfair Display', serif;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .mono-text {
+            font-family: 'Courier Prime', monospace;
         }
-        .board-layout {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            grid-template-rows: repeat(5, minmax(0, 1fr));
+        /* Gazeta qog'ozi g'adir-budur tekstura overlay effekti */
+        .paper-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
         }
-        .cell-aspect {
-            aspect-ratio: 1 / 1;
+        /* Vintage skrin datchigi va g'ira-shira effektlar */
+        .vintage-glow {
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.85);
         }
-        /* Custom dynamic scrollbars */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.5);
+        /* Progress bar uchun klassik chiziqli uslub */
+        .progress-striped {
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between antialiased select-none">
+<body class="bg-stone-950 text-stone-200 min-h-screen relative overflow-x-hidden vintage-glow selection:bg-stone-200 selection:text-stone-900">
 
-    <!-- FX OVOZ GENERATORI (Hech qanday tashqi audio fayllarsiz ishlaydi) -->
-    <script>
-        const SoundFX = {
-            ctx: null,
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-            play(type) {
-                try {
-                    this.init();
-                    if (!this.ctx) return;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+    <div class="paper-overlay"></div>
 
-                    const now = this.ctx.currentTime;
-                    if (type === 'click') {
-                        osc.frequency.setValueAtTime(400, now);
-                        osc.frequency.exponentialRampToValueAtTime(10, now + 0.08);
-                        gain.gain.setValueAtTime(0.1, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                        osc.start(now);
-                        osc.stop(now + 0.08);
-                    } else if (type === 'dice') {
-                        osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(150, now);
-                        osc.frequency.setValueAtTime(300, now + 0.05);
-                        osc.frequency.setValueAtTime(200, now + 0.1);
-                        gain.gain.setValueAtTime(0.15, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                        osc.start(now);
-                        osc.stop(now + 0.15);
-                    } else if (type === 'buy') {
-                        osc.frequency.setValueAtTime(523.25, now); // C5
-                        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                        osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                        gain.gain.setValueAtTime(0.1, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                        osc.start(now);
-                        osc.stop(now + 0.3);
-                    } else if (type === 'rent') {
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(250, now);
-                        osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                        gain.gain.setValueAtTime(0.15, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                        osc.start(now);
-                        osc.stop(now + 0.2);
-                    } else if (type === 'jail') {
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(90, now);
-                        osc.frequency.setValueAtTime(60, now + 0.15);
-                        gain.gain.setValueAtTime(0.2, now);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                        osc.start(now);
-                        osc.stop(now + 0.4);
-                    }
-                } catch (e) { console.error("Audio FX error", e); }
-            }
-        };
-    </script>
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-md w-full pointer-events-none"></div>
 
-    <!-- HEADER NAVIGATION -->
-    <header class="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center z-40">
-        <div class="flex items-center gap-3">
-            <div class="w-3 h-3 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/50 animate-pulse"></div>
-            <span class="text-sm font-bold tracking-widest text-slate-400 uppercase bg-clip-text">MONOPOLY MINI</span>
-        </div>
-        <div id="nav-profile-area" class="hidden items-center gap-4 glass-panel px-4 py-2 rounded-full shadow-lg">
-            <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-                <span id="lbl-nav-email" class="text-xs font-semibold text-slate-300 max-w-[120px] sm:max-w-[200px] truncate"></span>
+    <div id="screen-auth" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full border border-stone-800 bg-stone-900/90 p-8 shadow-2xl relative backdrop-blur-sm">
+            <div class="absolute inset-0 border border-stone-700 m-1 pointer-events-none"></div>
+            <div class="text-center mb-8">
+                <span class="mono-text text-xs uppercase tracking-widest text-stone-500">Toshkent • 1913-yil</span>
+                <h1 class="serif-title text-4xl font-bold uppercase tracking-tight text-stone-100 mt-2">Jadidlar</h1>
+                <p class="serif-title text-sm italic text-stone-400 mt-1">Yashirin Ma’rifat</p>
+                <div class="w-24 h-[1px] bg-stone-700 mx-auto my-4"></div>
+                <p class="text-xs text-stone-400 px-4 leading-relaxed">
+                    "Mualliflari chor maxfiy xizmati ta’qibidagi ziyolilar va millat fidoyilari boʻlgan maxfiy matbaa olamiga xush kelibsiz."
+                </p>
             </div>
-            <button id="btn-global-logout" class="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors uppercase tracking-wider pl-2 border-l border-white/10">Chiqish</button>
-        </div>
-    </header>
 
-    <!-- SYSTEM GLOBAL SCREEN NOTIFICATIONS -->
-    <div id="global-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 transform scale-95 opacity-0 pointer-events-none transition-all duration-300 glass-panel px-5 py-2.5 rounded-xl border border-indigo-500/30 text-xs font-medium text-indigo-300 shadow-2xl flex items-center gap-2">
-        <span id="toast-msg">Habarnoma</span>
+            <div id="auth-form-container">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1 font-medium">Elektron Pochta</label>
+                        <input type="email" id="auth-email" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono" placeholder="masalan: jadid@ijod.uz">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1 font-medium">Parol</label>
+                        <input type="password" id="auth-password" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono" placeholder="••••••••">
+                    </div>
+                    <div class="pt-2">
+                        <button id="btn-login" class="w-full bg-stone-200 text-stone-950 text-xs uppercase font-bold tracking-widest py-3 border border-stone-300 hover:bg-stone-300 transition duration-150 cursor-pointer">
+                            Tizimga Kirish
+                        </button>
+                    </div>
+                    <div class="text-center pt-2">
+                        <button id="btn-toggle-register" class="text-xs text-stone-400 hover:text-stone-200 underline cursor-pointer">
+                            Yangi hisob yaratish (Roʻyxatdan oʻtish)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="register-form-container" class="hidden">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1 font-medium">Taxallus (Oʻyindagi ism)</label>
+                        <input type="text" id="reg-username" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono" placeholder="masalan: Choʻlpon">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1 font-medium">Elektron Pochta</label>
+                        <input type="email" id="reg-email" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1 font-medium">Parol</label>
+                        <input type="password" id="reg-password" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono" placeholder="Kamida 6 ta belgi">
+                    </div>
+                    <div class="pt-2">
+                        <button id="btn-register" class="w-full bg-stone-800 text-stone-100 text-xs uppercase font-bold tracking-widest py-3 border border-stone-700 hover:bg-stone-700 transition duration-150 cursor-pointer">
+                            Roʻyxatdan Oʻtish
+                        </button>
+                    </div>
+                    <div class="text-center pt-2">
+                        <button id="btn-toggle-login" class="text-xs text-stone-400 hover:text-stone-200 underline cursor-pointer">
+                            Mavjud hisobga qaytish
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- MAIN SPA SCREEN CONTAINER -->
-    <main class="flex-grow flex items-center justify-center p-2 sm:p-4 w-full max-w-7xl mx-auto">
+    <div id="screen-lobby" class="hidden min-h-screen p-6 max-w-6xl mx-auto flex flex-col">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border border-stone-800 bg-stone-900/50 p-4 mb-6 relative">
+            <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+            <div>
+                <h2 class="serif-title text-xl font-bold uppercase tracking-wider text-stone-200" id="lobby-welcome-user">Ma'rifatparvar</h2>
+                <p class="text-xs text-stone-400 font-mono mt-0.5">Holat: Tahririyat Kengashida</p>
+            </div>
+            <div class="flex items-center gap-4 mt-4 sm:mt-0 z-10">
+                <button id="btn-logout" class="border border-stone-700 px-4 py-2 text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 hover:border-stone-500 transition cursor-pointer">
+                    Chiqish
+                </button>
+            </div>
+        </div>
 
-        <!-- ================= EKRAN 1: AUTHENTICATION ================= -->
-        <section id="view-auth" class="w-full max-w-md mx-auto transition-all duration-300 block">
-            <div class="glass-panel p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-                <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-violet-600/10 rounded-full blur-3xl"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+            <div class="border border-stone-800 bg-stone-900/70 p-6 relative flex flex-col justify-between h-fit">
+                <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+                <div>
+                    <h3 class="serif-title text-lg font-bold uppercase tracking-wide text-stone-100 border-b border-stone-800 pb-2 mb-4">Yangi Maxfiy Xona</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1">Xona Nomi</label>
+                            <input type="text" id="room-name-input" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500" placeholder="Sadoi Turkiston matbaasi">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-1">O'yinchilar Soni (2-4)</label>
+                            <select id="room-max-players" class="w-full bg-stone-950 border border-stone-800 p-2 text-sm text-stone-200 focus:outline-none focus:border-stone-500 font-mono">
+                                <option value="2">2 nafar o'yinchi (Tezkor tartib)</option>
+                                <option value="3">3 nafar o'yinchi (Standart)</option>
+                                <option value="4" selected>4 nafar o'yinchi (Tavsiya etiladi)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-6">
+                    <button id="btn-create-room" class="w-full bg-stone-200 text-stone-950 text-xs uppercase font-bold tracking-widest py-3 border border-stone-300 hover:bg-stone-300 transition cursor-pointer">
+                        Yangi Matbaa Ochish
+                    </button>
+                </div>
+            </div>
+
+            <div class="border border-stone-800 bg-stone-900/70 p-6 relative lg:col-span-2 flex flex-col">
+                <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+                <h3 class="serif-title text-lg font-bold uppercase tracking-wide text-stone-100 border-b border-stone-800 pb-2 mb-4 flex justify-between items-center">
+                    <span>Faol Ma'rifat Markazlari</span>
+                    <span class="mono-text text-xs text-stone-500 uppercase tracking-widest" id="active-rooms-count">Xonalar: 0</span>
+                </h3>
                 
-                <div class="text-center mb-8 relative z-10">
-                    <h2 id="txt-auth-title" class="text-3xl font-extrabold tracking-tight text-white mb-2">Tizimga Kirish</h2>
-                    <p id="txt-auth-desc" class="text-slate-400 text-sm">O'yin lobbisiga kirish uchun profilingizni tasdiqlang</p>
-                </div>
-
-                <div id="box-auth-error" class="hidden mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium text-center"></div>
-
-                <form id="el-auth-form" onsubmit="return false;" class="space-y-4 relative z-10">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Foydalanuvchi Email</label>
-                        <input type="email" id="inp-auth-email" required class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/5 focus:border-indigo-500/40 text-white placeholder-slate-600 focus:outline-none transition-all text-sm" placeholder="user@monopoly.uz">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Yashirin Parol</label>
-                        <input type="password" id="inp-auth-password" required class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/5 focus:border-indigo-500/40 text-white placeholder-slate-600 focus:outline-none transition-all text-sm" placeholder="••••••••">
-                    </div>
-
-                    <button type="submit" id="btn-auth-submit" class="w-full py-4 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-sm shadow-xl hover:opacity-90 transition-all active:scale-[0.99]">Tizimga Kirish</button>
-                </form>
-
-                <div class="mt-6 pt-6 border-t border-white/5 text-center relative z-10">
-                    <button id="btn-auth-toggle" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">Yangi hisob yaratish (Sign Up)</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= EKRAN 2: LOBBY MANAGEMENT ================= -->
-        <section id="view-lobby" class="w-full max-w-lg mx-auto transition-all duration-300 hidden">
-            <div class="glass-panel p-8 rounded-3xl shadow-2xl relative">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">O'yin Lobbi Zali</h2>
-                    <p class="text-slate-400 text-sm mt-1">Onlayn multiplayer xonalarini boshqarish paneli</p>
-                </div>
-
-                <div id="box-lobby-error" class="hidden mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium text-center"></div>
-
-                <div class="space-y-6">
-                    <!-- Create Action -->
-                    <div class="p-5 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col items-center">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Yangi Multiplayer Seans</h3>
-                        <p class="text-[11px] text-slate-500 text-center mb-4">Siz xona egasi (Host) sifatida qolgan 3 tagacha o'yinchini taklif qila olasiz.</p>
-                        <button id="btn-lobby-create" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/10 transition-all active:scale-[0.99]">Yangi Xona Yaratish</button>
-                    </div>
-
-                    <div class="relative flex py-1 items-center text-slate-700">
-                        <div class="flex-grow border-t border-white/5"></div>
-                        <span class="flex-shrink mx-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Yoki Ulanish</span>
-                        <div class="flex-grow border-t border-white/5"></div>
-                    </div>
-
-                    <!-- Join Action -->
-                    <div class="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-3">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Mavjud Xonaga Kirish</h3>
-                        <input type="text" id="inp-lobby-code" maxlength="6" class="w-full px-4 py-3.5 rounded-xl bg-slate-950/80 border border-white/5 focus:border-indigo-500/40 text-white placeholder-slate-600 focus:outline-none transition-all text-center tracking-widest font-extrabold text-xl uppercase" placeholder="KODNI YOZING">
-                        <button id="btn-lobby-join" class="w-full py-3.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-500/10 transition-all active:scale-[0.99]">Xonaga Qo'shilish</button>
+                <div id="rooms-list-container" class="flex-1 overflow-y-auto space-y-3 pr-2 max-h-[450px]">
+                    <div class="text-center py-12 text-stone-500 text-sm italic border border-dashed border-stone-800">
+                        Hozircha hech qanday maxfiy matbaa xonasi aniqlanmadi. Chap tomondan yangi xona yarating.
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- ================= EKRAN 3: WAITING ROOM ================= -->
-        <section id="view-waiting" class="w-full max-w-md mx-auto transition-all duration-300 hidden">
-            <div class="glass-panel p-6 rounded-3xl shadow-2xl relative">
-                <!-- Top Badge Room Code -->
-                <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-black uppercase tracking-widest rounded-full shadow-xl border border-indigo-400/20">
-                    XONA KODI: <span id="txt-wait-roomcode" class="text-yellow-300 select-all ml-1 font-black">------</span>
-                </div>
-
-                <div class="text-center mt-6 mb-6">
-                    <h3 class="text-xl font-bold text-white tracking-wide">Tayyorgarlik Zali</h3>
-                    <p class="text-xs text-slate-400 mt-1">O'yinchilar yig'ilmoqda (Maksimal 4 kishi)</p>
-                </div>
-
-                <!-- Live Dynamic Realtime List -->
-                <div id="box-waiting-list" class="space-y-3 mb-6">
-                    <!-- JS population -->
-                </div>
-
-                <!-- Control Buttons -->
-                <div class="space-y-2.5">
-                    <button id="btn-wait-start" class="hidden w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-xl transition-all disabled:opacity-40 active:scale-[0.99]">O'yinni Boshlash</button>
-                    <button id="btn-wait-leave" class="w-full py-3.5 rounded-xl bg-slate-950/60 border border-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 text-slate-300 hover:text-rose-400 font-bold text-sm transition-all active:scale-[0.99]">Xonani Tark Etish</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= EKRAN 4: HAQIQIY O'YIN MAYDONI ================= -->
-        <section id="view-game" class="w-full transition-all duration-300 hidden flex flex-col lg:flex-row gap-6 items-stretch justify-center">
+    <div id="screen-room-waiting" class="hidden min-h-screen p-6 max-w-4xl mx-auto flex flex-col justify-center">
+        <div class="border border-stone-800 bg-stone-900/80 p-8 relative shadow-2xl">
+            <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
             
-            <!-- CHAP PANEL: STATUS PANEL VA DASHBOARD -->
-            <div class="w-full lg:w-80 flex flex-col gap-4 justify-between">
+            <div class="text-center border-b border-stone-800 pb-6 mb-6">
+                <span class="mono-text text-xs uppercase tracking-widest text-stone-500" id="wait-room-id">XONA ID: -</span>
+                <h2 class="serif-title text-3xl font-bold uppercase tracking-tight text-stone-100 mt-1" id="wait-room-title">Matbaa Nomi</h2>
+                <p class="text-xs text-stone-400 mt-1">Barcha a'zolar yig'ilgandan so'ng ma'rifat harakati boshlanadi.</p>
+            </div>
+
+            <div class="my-6">
+                <h4 class="text-xs uppercase tracking-wider text-stone-400 mb-3 font-semibold text-center">Yig'ilgan tahririyat a'zolari (<span id="wait-players-count">0/4</span>)</h4>
+                <div id="wait-players-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
+                    </div>
+            </div>
+
+            <div class="border-t border-stone-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button id="btn-leave-waiting" class="w-full sm:w-auto border border-stone-700 px-6 py-2.5 text-xs uppercase tracking-widest text-stone-400 hover:text-stone-200 hover:border-stone-500 transition cursor-pointer">
+                    Matbaani Tark Etish
+                </button>
+                <div class="text-xs italic text-stone-400 text-center sm:text-right" id="wait-status-msg">
+                    Boshqa ziyolilarning qo'shilishini kutilmoqda...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game" class="hidden min-h-screen p-4 xl:p-6 max-w-7xl mx-auto flex flex-col gap-4 relative">
+        
+        <div id="deduction-overlay" class="hidden fixed inset-0 bg-stone-950/95 z-40 flex flex-col items-center justify-center p-6 transition duration-300">
+            <div class="max-w-3xl w-full border border-stone-800 bg-stone-900 p-8 text-center relative shadow-2xl">
+                <div class="absolute inset-0 border border-stone-700 m-1 pointer-events-none"></div>
                 
-                <!-- Match Status Info Header -->
-                <div class="glass-panel p-4 rounded-2xl space-y-3 shadow-lg flex-shrink-0">
-                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span class="text-xs text-slate-400 font-medium">Navbatdagi o'yinchi:</span>
-                        <span id="lbl-game-turn" class="text-xs font-bold text-yellow-400 bg-yellow-400/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Kutilmoqda</span>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Jonli bildirishnoma:</span>
-                        <p id="lbl-game-log" class="text-xs font-semibold text-indigo-300 italic line-clamp-2 min-h-[2rem]">O'yin yuklanmoqda...</p>
-                    </div>
+                <span class="mono-text text-xs uppercase tracking-widest text-stone-500 animate-pulse">Favqulodda fosh etish fazasi</span>
+                <h2 class="serif-title text-4xl font-bold uppercase tracking-tight text-stone-100 mt-2">Suhbat va Fosh Etish</h2>
+                <p class="text-sm italic text-stone-400 mt-1">Chor maxfiy xizmati odami ichimizda. Uni fosh qilish vaqti keldi.</p>
+                
+                <div class="my-6 inline-block border border-stone-700 px-6 py-2 bg-stone-950">
+                    <span class="text-xs uppercase tracking-wider text-stone-500 block">Qolgan Vaqt</span>
+                    <span class="serif-title text-3xl font-bold text-stone-200 font-mono" id="deduction-timer">60</span>
                 </div>
 
-                <!-- Players Financial Status Realtime Dashboard -->
-                <div id="box-game-players" class="space-y-2.5 flex-grow overflow-y-auto max-h-[240px] lg:max-h-none py-1">
-                    <!-- Dynamic rendering rows -->
-                </div>
-
-                <!-- Dice Controllers & Action Panels -->
-                <div class="glass-panel p-4 rounded-2xl shadow-lg space-y-4 flex-shrink-0">
-                    <div class="flex justify-center items-center gap-4 py-1">
-                        <!-- Dice Visual Container with CSS rotations -->
-                        <div id="ui-dice" class="w-14 h-14 bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-white/10 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-2xl transition-transform duration-150">
-                            -
-                        </div>
+                <p class="text-xs uppercase tracking-wider text-stone-400 mb-4 font-semibold">Gumondor portretini tanlang va ovoz bering:</p>
+                <div id="deduction-vote-list" class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto mb-6">
                     </div>
-                    <button id="btn-game-roll" disabled class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 disabled:opacity-30 disabled:pointer-events-none text-white font-bold text-sm shadow-xl transition-all active:scale-[0.99]">Zar Tashlash</button>
-                    
-                    <!-- Dynamic Fast Property Actions (Uylar qurish / Garovdan yechish) -->
-                    <div id="box-quick-management" class="hidden border-t border-white/5 pt-3 mt-1 text-center">
-                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Mulk boshqaruvi (Sizning navbatingizda)</span>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="btn-manage-build" class="py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-300 font-bold text-[10px] uppercase">Uy Qurish</button>
-                            <button id="btn-manage-mortgage" class="py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-[10px] uppercase">Garovga qo'yish</button>
-                        </div>
-                    </div>
-                </div>
 
+                <div class="text-xs text-stone-500 font-mono" id="vote-status-feedback">
+                    Siz hali ovoz bermadingiz. Unutmang, noto'g'ri qaror millat kelajagini xavf ostiga qo'yadi.
+                </div>
             </div>
+        </div>
 
-            <!-- O'NG PANEL / MARKAZ: 16 KATAKLI PROFESSIONAL KVADRAT MAYDON -->
-            <div class="flex items-center justify-center flex-grow">
-                <div class="w-[94vw] h-[94vw] sm:w-[490px] sm:h-[490px] md:w-[540px] md:h-[540px] bg-slate-950 border border-white/10 rounded-3xl p-2 shadow-2xl relative overflow-hidden">
-                    
-                    <!-- CENTER CONTAINER: DIALOG MODALS & INTERACTIVE BOX -->
-                    <div id="board-center-core" class="absolute inset-[21%] rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/5 flex flex-col items-center justify-center p-4 text-center z-30 shadow-2xl overflow-y-auto">
-                        
-                        <!-- Neutral Core Logo -->
-                        <div id="core-state-neutral" class="space-y-1 block animate-float">
-                            <h1 class="text-xl sm:text-2xl font-black tracking-widest bg-gradient-to-br from-white via-slate-300 to-slate-500 bg-clip-text text-transparent">MONOPOLY</h1>
-                            <p class="text-[9px] text-indigo-400 font-bold tracking-widest uppercase">Toshkent Pro SPA</p>
-                        </div>
+        <div class="border border-stone-800 bg-stone-900/50 p-4 relative">
+            <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+            <div class="flex justify-between items-center border-b border-stone-800 pb-2 mb-3">
+                <span class="text-xs uppercase tracking-widest font-bold text-stone-400">Tahririyat jamoasi tarkibi</span>
+                <span class="mono-text text-xs text-stone-400 bg-stone-950 px-2 py-0.5 border border-stone-800" id="game-turn-counter">Yurishlar: 0 / 3</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="game-players-container">
+                </div>
+        </div>
 
-                        <!-- Realtime Interactive Property Purchase Request -->
-                        <div id="core-state-buy-request" class="hidden w-full flex-col items-center justify-center space-y-3">
-                            <span class="text-[9px] font-black text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Sotib olish taklifi</span>
-                            <h4 id="lbl-modal-title" class="text-xs sm:text-sm font-extrabold text-white line-clamp-1">Mulk Nomi</h4>
-                            <p class="text-xs text-slate-300">Qiymati: <span id="lbl-modal-cost" class="text-yellow-400 font-bold">$0</span></p>
-                            <div class="flex gap-2 w-full pt-1">
-                                <button id="btn-core-buy" class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all active:scale-[0.95]">Sotib Olish</button>
-                                <button id="btn-core-skip" class="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs transition-all hover:bg-white/10 active:scale-[0.95]">Rad etish</button>
-                            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+            
+            <div class="lg:col-span-2 border border-stone-800 bg-stone-900/40 p-6 relative flex flex-col justify-center gap-6">
+                <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+                
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <h3 class="serif-title text-xl font-bold uppercase tracking-wide text-stone-200">Ma'rifat Darajasi</h3>
+                            <p class="text-xs text-stone-400 italic">Jadidlar g'alabasi uchun (Maqsad: 100%)</p>
                         </div>
-
-                        <!-- In Jail Status Panel -->
-                        <div id="core-state-jail-options" class="hidden w-full flex-col items-center justify-center space-y-2">
-                            <span class="text-xs font-black text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Siz Qamoqdasiz</span>
-                            <p class="text-[10px] text-slate-400">Chiqish variantini tanlang (Muddat: <span id="lbl-jail-turns-left" class="font-bold text-white">3</span> ta navbat)</p>
-                            <div class="flex flex-col gap-1.5 w-full pt-1">
-                                <button id="btn-jail-pay" class="w-full py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-[11px] uppercase transition-all active:scale-[0.96]">$50 jarima to'lash</button>
-                                <button id="btn-jail-roll" class="w-full py-1.5 rounded-lg bg-indigo-500 text-white font-bold text-[11px] uppercase transition-all active:scale-[0.96]">Dubl uchun zar tashlash</button>
-                            </div>
-                        </div>
-
-                        <!-- Ultimate Victory Game Over Screen -->
-                        <div id="core-state-victory" class="hidden w-full flex-col items-center justify-center space-y-3">
-                            <span class="text-3xl animate-bounce">🏆</span>
-                            <h3 class="text-base font-black text-yellow-400 uppercase tracking-widest">O'yin Yakunlandi</h3>
-                            <p id="lbl-victory-winner" class="text-xs text-white font-semibold">G'olib aniqlanmoqda...</p>
-                            <button id="btn-victory-terminate" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg active:scale-[0.95]">Lobbyga Qaytish</button>
-                        </div>
+                        <span class="serif-title text-3xl font-bold text-stone-100 font-mono" id="stat-enlightenment-txt">0%</span>
                     </div>
+                    <div class="w-full bg-stone-950 border border-stone-800 p-1 h-8">
+                        <div id="stat-enlightenment-bar" class="h-full bg-stone-300 progress-striped transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
 
-                    <!-- 16 CELLS CORE GRID LAYOUT -->
-                    <div class="w-full h-full board-layout gap-1">
-                        
-                        <!-- CELL 0: START (TOP LEFT) -->
-                        <div id="cell-0" class="glass-card rounded-xl p-1 flex flex-col justify-between items-center text-center relative border-2 border-transparent cell-aspect">
-                            <span class="text-[9px] sm:text-[11px] font-black text-emerald-400 tracking-tighter leading-none mt-1">START</span>
-                            <span class="text-[8px] text-emerald-500 font-bold leading-none mb-1">+$200</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-1"></div>
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <h3 class="serif-title text-xl font-bold uppercase tracking-wide text-stone-200">Xavf Darajasi</h3>
+                            <p class="text-xs text-stone-400 italic">Chaqimchi g'alabasi uchun (Mag'lubiyat: 100%)</p>
                         </div>
+                        <span class="serif-title text-3xl font-bold text-stone-100 font-mono" id="stat-danger-txt">0%</span>
+                    </div>
+                    <div class="w-full bg-stone-950 border border-stone-800 p-1 h-8">
+                        <div id="stat-danger-bar" class="h-full bg-stone-700 progress-striped transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
 
-                        <!-- CELL 1 -->
-                        <div id="cell-1" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-pink-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Chilonzor</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$120</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 2 -->
-                        <div id="cell-2" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-pink-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Qatortol</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$140</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 3 -->
-                        <div id="cell-3" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-pink-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Bunyodkor</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$160</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 4: JAIL (TOP RIGHT) -->
-                        <div id="cell-4" class="glass-card rounded-xl p-1 flex flex-col justify-between items-center text-center relative border-2 border-transparent cell-aspect">
-                            <span class="text-[9px] sm:text-[11px] font-black text-rose-400 tracking-tighter leading-none mt-1">QAMOQ</span>
-                            <span class="text-[8px] text-slate-400 font-medium leading-none mb-1">Zindondan chiqish</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-1"></div>
-                        </div>
-
-                        <!-- CELL 15 (LEFT SIDE) -->
-                        <div id="cell-15" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-blue-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Sergeli</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$100</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- SPACING GRID FOR CENTER FIELD (3x3 grid system) -->
-                        <div class="col-span-3 row-span-3 pointer-events-none"></div>
-
-                        <!-- CELL 5 (RIGHT SIDE) -->
-                        <div id="cell-5" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-orange-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Yunusobod</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$180</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 14 (LEFT SIDE) -->
-                        <div id="cell-14" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-blue-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Aeroport</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$100</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 6 (RIGHT SIDE) -->
-                        <div id="cell-6" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-orange-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Shahrisabz</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$200</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 13 (LEFT SIDE) -->
-                        <div id="cell-13" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-cyan-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Navoiy k.</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$350</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 7 (RIGHT SIDE) -->
-                        <div id="cell-7" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-orange-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Mustaqillik</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$220</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 12: GO TO JAIL (BOTTOM LEFT) -->
-                        <div id="cell-12" class="glass-card rounded-xl p-1 flex flex-col justify-between items-center text-center relative border-2 border-transparent cell-aspect">
-                            <span class="text-[8px] sm:text-[10px] font-black text-amber-400 tracking-tighter leading-none mt-1 uppercase">MUMTOZ<br>QAMOQQA</span>
-                            <span class="text-[7px] text-slate-500 font-bold leading-none mb-1">Index 4 ga</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-1"></div>
-                        </div>
-
-                        <!-- CELL 11 -->
-                        <div id="cell-11" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-cyan-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">Oloy Bozori</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$300</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 10 -->
-                        <div id="cell-10" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-cyan-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">A.Temur k.</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$280</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 9 -->
-                        <div id="cell-9" class="glass-card rounded-xl flex flex-col justify-between items-center text-center relative overflow-hidden border-2 border-transparent cell-aspect">
-                            <div class="w-full h-2.5 bg-cyan-500 shadow-inner"></div>
-                            <span class="text-[8px] sm:text-[10px] font-bold text-slate-200 px-0.5 truncate w-full">M.Gandi k.</span>
-                            <div class="house-holder flex justify-center gap-0.5 text-[7px] text-emerald-400 leading-none"></div>
-                            <span class="text-[8px] text-yellow-400 font-semibold mb-1">$260</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-3"></div>
-                        </div>
-
-                        <!-- CELL 8: PARKING (BOTTOM RIGHT) -->
-                        <div id="cell-8" class="glass-card rounded-xl p-1 flex flex-col justify-between items-center text-center relative border-2 border-transparent cell-aspect">
-                            <span class="text-[9px] sm:text-[11px] font-black text-sky-400 tracking-tighter leading-none mt-1">AVTO-BEK</span>
-                            <span class="text-[8px] text-slate-500 font-bold leading-none mb-1">Dam olish</span>
-                            <div class="token-holder flex flex-wrap gap-0.5 justify-center items-center absolute inset-x-1 bottom-1"></div>
-                        </div>
-
+                <div class="border-t border-stone-800 pt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-stone-400 gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-700 animate-ping"></span>
+                        <span id="game-current-turn-indicator">Navbat: -</span>
+                    </div>
+                    <div id="user-secret-role-box" class="bg-stone-950 border border-stone-800 px-3 py-1 font-mono text-stone-300">
+                        Yashirin Rolingiz: Yuklanmoqda...
                     </div>
                 </div>
             </div>
-        </section>
 
-    </main>
+            <div class="border border-stone-800 bg-stone-900/60 p-4 relative flex flex-col h-[300px] lg:h-auto justify-between">
+                <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+                
+                <h4 class="text-xs uppercase tracking-wider text-stone-400 border-b border-stone-800 pb-2 mb-2 font-bold">Matbaa Muzokaralari</h4>
+                
+                <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-2 text-xs font-mono pr-1 mb-2">
+                    </div>
 
-    <!-- FOOTER DEVELOPMENT FOOTPRINT -->
-    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-medium tracking-widest uppercase">
-        &copy; 2026 Monopoly Mini SPA • Engineered by Senior Full-Stack Architecture
-    </footer>
+                <div class="flex gap-2 border-t border-stone-800 pt-2">
+                    <input type="text" id="chat-input" class="flex-1 bg-stone-950 border border-stone-800 p-2 text-xs text-stone-200 focus:outline-none focus:border-stone-500" placeholder="Fikringizni yozing...">
+                    <button id="btn-send-chat" class="bg-stone-200 text-stone-950 px-3 py-1 text-xs uppercase font-bold tracking-wider border border-stone-300 hover:bg-stone-300 cursor-pointer">
+                        Yuborish
+                    </button>
+                </div>
+            </div>
+        </div>
 
+        <div class="border border-stone-800 bg-stone-900/50 p-4 relative">
+            <div class="absolute inset-0 border border-stone-700/50 m-1 pointer-events-none"></div>
+            <p class="text-xs uppercase tracking-wider text-stone-400 mb-3 font-bold">Qo'lingizdagi Ma'rifat Harakat Kartalari:</p>
+            
+            <div id="action-cards-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                </div>
+        </div>
 
-    <!-- ================= REALTIME ENGINE MODULE ================= -->
+        <div class="flex justify-start">
+            <button id="btn-game-quit" class="border border-stone-800 px-4 py-2 text-xs uppercase tracking-wider text-stone-500 hover:text-stone-300 hover:border-stone-600 transition cursor-pointer">
+                Tahririyatni Tashlab Chiqish (Favqulodda tark etish)
+            </button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-stone-950/95 z-50 flex items-center justify-center p-4">
+        <div class="max-w-md w-full border border-stone-700 bg-stone-900 p-8 text-center relative shadow-2xl">
+            <div class="absolute inset-0 border border-stone-500 m-1 pointer-events-none"></div>
+            
+            <span class="mono-text text-xs uppercase tracking-widest text-stone-500">Tarix Sahifalaridan Muxrlangan Yakun</span>
+            <h2 class="serif-title text-4xl font-bold uppercase tracking-tight text-stone-100 mt-2" id="go-title">G'alaba</h2>
+            <p class="text-sm text-stone-400 italic mt-2 px-2" id="go-description">O'yin yakunlandi.</p>
+            
+            <div class="w-16 h-[1px] bg-stone-700 mx-auto my-6"></div>
+            
+            <button id="btn-go-close" class="w-full bg-stone-200 text-stone-950 text-xs uppercase font-bold tracking-widest py-3 border border-stone-300 hover:bg-stone-300 transition cursor-pointer">
+                Lobbyga Qaytish
+            </button>
+        </div>
+    </div>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, update, onValue, get, child, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // Firebase modul SDK larini import qilish
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, runTransaction, off, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Qat'iy ajratilgan backend konfiguratsiyasi
+        // Qat'iy sozlangan Firebase konfiguratsiyasi
         const firebaseConfig = {
             apiKey: "AIzaSyClWyzrxVqty9IsO6gT4PWwRIxjFJDOOwA",
             authDomain: "unobot-a99df.firebaseapp.com",
@@ -520,874 +337,1117 @@
             measurementId: "G-M7KQEKKQ05"
         };
 
+        // Firebase ilovasini ishga tushirish
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Global Dynamic State Variables
-        let activeUser = null;
+        // GLOBALLASHGAN O'YIN HOLATI (STATE)
+        let currentUser = null;
         let currentRoomId = null;
-        let isLoginView = true;
-        let databaseListenerRef = null;
+        let currentRoomData = null;
+        let activeRoomsListener = null;
+        let currentRoomListener = null;
+        let deductionTimerInterval = null;
 
-        // Premium multi-tokens metadata
-        const visualColors = [
-            { bg: 'bg-indigo-500', border: 'border-indigo-300', hex: '#6366f1', fill: 'rgba(99,102,241,0.1)' },
-            { bg: 'bg-emerald-500', border: 'border-emerald-300', hex: '#10b981', fill: 'rgba(16,185,129,0.1)' },
-            { bg: 'bg-amber-500', border: 'border-amber-300', hex: '#f59e0b', fill: 'rgba(245,158,11,0.1)' },
-            { bg: 'bg-rose-500', border: 'border-rose-300', hex: '#f43f5e', fill: 'rgba(244,63,94,0.1)' }
-        ];
-
-        // 16 cells full metadata matrix
-        const boardMatrix = {
-            0: { name: "START", type: "special" },
-            1: { name: "Chilonzor ko'chasi", type: "property", cost: 120, baseRent: 15, houseCost: 50 },
-            2: { name: "Qatortol ko'chasi", type: "property", cost: 140, baseRent: 20, houseCost: 50 },
-            3: { name: "Bunyodkor shoh ko'chasi", type: "property", cost: 160, baseRent: 25, houseCost: 60 },
-            4: { name: "QAMOQXONA", type: "special" },
-            5: { name: "Yunusobod tumani", type: "property", cost: 180, baseRent: 30, houseCost: 70 },
-            6: { name: "Shahrisabz ko'chasi", type: "property", cost: 200, baseRent: 35, houseCost: 80 },
-            7: { name: "Mustaqillik maydoni", type: "property", cost: 220, baseRent: 40, houseCost: 90 },
-            8: { name: "AVTOTURGOH", type: "special" },
-            9: { name: "Mahatma Gandi ko'chasi", type: "property", cost: 260, baseRent: 45, houseCost: 100 },
-            10: { name: "Amir Temur ko'chasi", type: "property", cost: 280, baseRent: 50, houseCost: 110 },
-            11: { name: "Oloy bozori", type: "property", cost: 300, baseRent: 55, houseCost: 120 },
-            12: { name: "QAMOQQA JO'NATISH", type: "special" },
-            13: { name: "Alisher Navoiy ko'chasi", type: "property", cost: 350, baseRent: 70, houseCost: 150 },
-            14: { name: "Aeroport yo'li", type: "property", cost: 100, baseRent: 10, houseCost: 40 },
-            15: { name: "Sergeli dahasi", type: "property", cost: 100, baseRent: 10, houseCost: 40 }
+        // EKALANLAR RO'YXATI MENEJMENTI (SPA NAVIGATION)
+        const screens = {
+            auth: document.getElementById('screen-auth'),
+            lobby: document.getElementById('screen-lobby'),
+            waiting: document.getElementById('screen-room-waiting'),
+            game: document.getElementById('screen-game')
         };
 
-        // --- View Transitions Management ---
-        function navigateToScreen(targetId) {
-            const screens = ['view-auth', 'view-lobby', 'view-waiting', 'view-game'];
-            screens.forEach(id => {
-                const element = document.getElementById(id);
-                if (id === targetId) {
-                    element.classList.remove('hidden');
-                    element.classList.add('block');
+        function showScreen(screenKey) {
+            Object.keys(screens).forEach(key => {
+                if (key === screenKey) {
+                    screens[key].classList.remove('hidden');
                 } else {
-                    element.classList.remove('block');
-                    element.classList.add('hidden');
+                    screens[key].classList.add('hidden');
                 }
             });
         }
 
-        function triggerToast(message) {
-            const box = document.getElementById('global-toast');
-            document.getElementById('toast-msg').innerText = message;
-            box.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-            box.classList.add('opacity-100', 'scale-100');
+        // BILDirishnoma (TOAST TIZIMI)
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `w-full border p-3 font-mono text-xs shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 bg-stone-900 ${
+                type === 'error' ? 'border-red-900 text-red-300' : type === 'success' ? 'border-stone-500 text-stone-200' : 'border-stone-700 text-stone-300'
+            }`;
+            toast.innerHTML = `<div class="flex justify-between items-start"><span>${message}</span></div>`;
+            container.appendChild(toast);
+            
+            // Animatsiya start
             setTimeout(() => {
-                box.classList.remove('opacity-100', 'scale-100');
-                box.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            }, 3500);
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Avtomatik o'chirish
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y--2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-        // --- Identity & Access Core ---
-        const authFormEl = document.getElementById('el-auth-form');
-        const authSubmitBtn = document.getElementById('btn-auth-submit');
-        const authToggleBtn = document.getElementById('btn-auth-toggle');
-        const authErrorBox = document.getElementById('box-auth-error');
-
-        authToggleBtn.addEventListener('click', () => {
-            SoundFX.play('click');
-            isLoginView = !isLoginView;
-            authErrorBox.classList.add('hidden');
-            if(isLoginView) {
-                document.getElementById('txt-auth-title').innerText = "Tizimga Kirish";
-                document.getElementById('txt-auth-desc').innerText = "O'yin lobbisiga kirish uchun profilingizni tasdiqlang";
-                authSubmitBtn.innerText = "Tizimga Kirish";
-                authToggleBtn.innerText = "Yangi hisob yaratish (Sign Up)";
-            } else {
-                document.getElementById('txt-auth-title').innerText = "Ro'yxatdan O'tish";
-                document.getElementById('txt-auth-desc').innerText = "Monopoliya platformasida yangi profil oching";
-                authSubmitBtn.innerText = "Hisob Yaratish";
-                authToggleBtn.innerText = "Mavjud hisobga qaytish (Sign In)";
+        // VINTAGE PORTRET GENERATOR (GRAVYURA KO'RINISHIDAGI KO'HNA ESTETIKA)
+        function generateVintageAvatar(seedString, isDead = false) {
+            let hash = 0;
+            for (let i = 0; i < seedString.length; i++) {
+                hash = seedString.charCodeAt(i) + ((hash << 5) - hash);
             }
+            const id = Math.abs(hash) % 4;
+            
+            // 4 xil chuqur ma'noli qora-oq ziyoli silueti (Jadidlar tematikasi)
+            const portraits = [
+                // 1. Ziyoli - Dumaloq ko'zoynakli, qat'iy qiyofa
+                `<svg viewBox="0 0 100 100" class="w-full h-full object-cover grayscale opacity-80 filter contrast-125">
+                    <rect width="100" height="100" fill="#292524"/>
+                    <path d="M20 90 C 20 65, 35 60, 50 60 C 65 60, 80 65, 80 90" fill="none" stroke="#e7e5e4" stroke-width="2" stroke-dasharray="1 1"/>
+                    <circle cx="50" cy="40" r="16" fill="none" stroke="#e7e5e4" stroke-width="2"/>
+                    <line x1="50" y1="20" x2="50" y2="25" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <circle cx="43" cy="38" r="4" fill="none" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <circle cx="57" cy="38" r="4" fill="none" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <line x1="47" y1="38" x2="53" y2="38" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <path d="M45 50 Q 50 53, 55 50" fill="none" stroke="#e7e5e4" stroke-width="1.5"/>
+                </svg>`,
+                // 2. Klassik Millat Fidoyisi - Milliy telpak ko'rinishida va jiddiy nigoh
+                `<svg viewBox="0 0 100 100" class="w-full h-full object-cover grayscale opacity-80 filter contrast-125">
+                    <rect width="100" height="100" fill="#1c1917"/>
+                    <path d="M25 90 C 25 70, 35 65, 50 65 C 65 65, 75 70, 75 90" fill="none" stroke="#d6d3d1" stroke-width="2"/>
+                    <path d="M36 26 C 36 26, 50 20, 64 26 L 66 35 L 34 35 Z" fill="none" stroke="#d6d3d1" stroke-width="2"/>
+                    <path d="M38 35 C 38 35, 38 52, 50 52 C 62 52, 62 35, 62 35" fill="none" stroke="#d6d3d1" stroke-width="1.5"/>
+                    <line x1="44" y1="42" x2="48" y2="42" stroke="#d6d3d1" stroke-width="1.5"/>
+                    <line x1="52" y1="42" x2="56" y2="42" stroke="#d6d3d1" stroke-width="1.5"/>
+                    <path d="M46 48 Q 50 46, 54 48" fill="none" stroke="#d6d3d1" stroke-width="1.5"/>
+                </svg>`,
+                // 3. Yosh Islohotchi - Klassik soch turmagi va tahririyat o'ychanligi
+                `<svg viewBox="0 0 100 100" class="w-full h-full object-cover grayscale opacity-80 filter contrast-125">
+                    <rect width="100" height="100" fill="#292524"/>
+                    <path d="M22 90 C 22 68, 32 62, 50 62 C 68 62, 78 68, 78 90" fill="none" stroke="#e7e5e4" stroke-width="2" stroke-dasharray="2 1"/>
+                    <path d="M32 28 C 35 15, 65 15, 68 28 C 72 45, 68 53, 50 53 C 32 53, 28 45, 32 28 Z" fill="none" stroke="#e7e5e4" stroke-width="2"/>
+                    <line x1="42" y1="36" x2="47" y2="37" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <line x1="58" y1="36" x2="53" y2="37" stroke="#e7e5e4" stroke-width="1.5"/>
+                    <path d="M47 46 Q 50 49, 53 46" fill="none" stroke="#e7e5e4" stroke-width="2"/>
+                </svg>`,
+                // 4. Ma'rifat Navkari - Jiddiy, do'ppi ramzi bilan chizilgan chiziqlar
+                `<svg viewBox="0 0 100 100" class="w-full h-full object-cover grayscale opacity-80 filter contrast-125">
+                    <rect width="100" height="100" fill="#1c1917"/>
+                    <path d="M20 90 C 20 65, 35 60, 50 60 C 65 60, 80 65, 80 90" fill="none" stroke="#d6d3d1" stroke-width="2"/>
+                    <path d="M35 32 C 35 32, 50 24, 65 32 L 62 50 C 62 50, 50 55, 38 50 Z" fill="none" stroke="#d6d3d1" stroke-width="1.5"/>
+                    <path d="M38 27 L 62 27" stroke="#d6d3d1" stroke-width="2"/>
+                    <circle cx="45" cy="38" r="1.5" fill="#d6d3d1"/>
+                    <circle cx="55" cy="38" r="1.5" fill="#d6d3d1"/>
+                    <path d="M44 44 Q 50 42, 56 44" fill="none" stroke="#d6d3d1" stroke-width="1.5"/>
+                </svg>`
+            ];
+
+            if (isDead) {
+                // Chetlatilgan o'yinchi uchun ustiga "SURGUN" muhri urilgan qora variant
+                return `
+                <div class="relative w-full h-full">
+                    ${portraits[id]}
+                    <div class="absolute inset-0 bg-stone-950/80 flex items-center justify-center border border-red-950">
+                        <span class="mono-text text-red-600 font-bold text-xs uppercase tracking-widest rotate-12 border-2 border-red-700 px-1 py-0.5 bg-stone-900 shadow-lg">SURGUN</span>
+                    </div>
+                </div>`;
+            }
+            return portraits[id];
+        }
+
+
+        /* =========================================================================
+           PART 1: AUTHENTICATION (KIRISH-CHIQISH TIZIMI)
+           ========================================================================= */
+
+        // Ekran almashtirish knopkalari mantiqi
+        document.getElementById('btn-toggle-register').addEventListener('click', () => {
+            document.getElementById('auth-form-container').classList.add('hidden');
+            document.getElementById('register-form-container').classList.remove('hidden');
         });
 
-        authSubmitBtn.addEventListener('click', async () => {
-            SoundFX.play('click');
-            const email = document.getElementById('inp-auth-email').value.trim();
-            const password = document.getElementById('inp-auth-password').value;
+        document.getElementById('btn-toggle-login').addEventListener('click', () => {
+            document.getElementById('register-form-container').classList.add('hidden');
+            document.getElementById('auth-form-container').classList.remove('hidden');
+        });
 
-            if(!email || !password) {
-                authErrorBox.innerText = "Barcha maydonlarni to'ldiring.";
-                authErrorBox.classList.remove('hidden');
+        // Ro'yxatdan o'tish mantiqi
+        document.getElementById('btn-register').addEventListener('click', async () => {
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            if(!username || !email || !password) {
+                showToast("Barcha maydonlarni toʻldiring", "error");
+                return;
+            }
+            if(password.length < 6) {
+                showToast("Parol kamida 6 ta belgidan iborat boʻlishi lozim", "error");
                 return;
             }
 
-            authErrorBox.classList.add('hidden');
             try {
-                if(isLoginView) {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                }
-            } catch (err) {
-                authErrorBox.innerText = mapFirebaseErrors(err.code);
-                authErrorBox.classList.remove('hidden');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(userCredential.user, { displayName: username });
+                showToast("Muvaffaqiyatli roʻyxatdan oʻtdingiz!", "success");
+                // Tozalash
+                document.getElementById('reg-username').value = '';
+                document.getElementById('reg-email').value = '';
+                document.getElementById('reg-password').value = '';
+                document.getElementById('btn-toggle-login').click();
+            } catch (error) {
+                showToast(`Xatolik: ${error.message}`, "error");
             }
         });
 
-        function mapFirebaseErrors(code) {
-            switch(code) {
-                case 'auth/invalid-email': return "Email shakli yaroqsiz.";
-                case 'auth/user-not-found': return "Foydalanuvchi topilmadi.";
-                case 'auth/wrong-password': return "Xato maxfiy parol.";
-                case 'auth/email-already-in-use': return "Bu email allaqachon band.";
-                case 'auth/weak-password': return "Parol kamida 6 ta belgi bo'lsin.";
-                default: return "Avtorizatsiya xatosi: " + code;
-            }
-        }
+        // Tizimga kirish mantiqi
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
 
-        document.getElementById('btn-global-logout').addEventListener('click', () => {
-            SoundFX.play('click');
-            if(currentRoomId) executeLeaveSequence();
-            signOut(auth);
+            if(!email || !password) {
+                showToast("Elektron pochta va parolni kiriting", "error");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast("Xush kelibsiz, janob!", "success");
+            } catch (error) {
+                showToast("Hisob topilmadi yoki parol notoʻgʻri", "error");
+            }
         });
 
+        // Chiqish mantiqi
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showToast("Siz tahririyat kengashidan chiqdingiz.");
+            } catch(error) {
+                showToast(error.message, "error");
+            }
+        });
+
+        // AUTH HOALTI KUZATUVCHISI
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                activeUser = user;
-                document.getElementById('lbl-nav-email').innerText = user.email;
-                document.getElementById('nav-profile-area').classList.remove('hidden');
-                document.getElementById('nav-profile-area').classList.add('flex');
-                if(!currentRoomId) navigateToScreen('view-lobby');
+                currentUser = user;
+                document.getElementById('lobby-welcome-user').innerText = user.displayName || user.email;
+                showScreen('lobby');
+                initLobbyRooms(); // Lobbi yuklash
             } else {
-                activeUser = null;
+                currentUser = null;
                 currentRoomId = null;
-                document.getElementById('nav-profile-area').classList.remove('flex');
-                document.getElementById('nav-profile-area').classList.add('hidden');
-                navigateToScreen('view-auth');
+                // Kuzatuvchilarni tozalash
+                if(activeRoomsListener) off(ref(db, 'jadidlar_rooms'), 'value', activeRoomsListener);
+                detachRoomListener();
+                showScreen('auth');
             }
         });
 
-        // --- Lobby Framework ---
-        const lobbyErrorBox = document.getElementById('box-lobby-error');
-        
-        document.getElementById('btn-lobby-create').addEventListener('click', async () => {
-            SoundFX.play('click');
-            lobbyErrorBox.classList.add('hidden');
-            const generatedCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const targetRef = ref(db, `rooms/${generatedCode}`);
 
-            const roomBlueprint = {
-                roomId: generatedCode,
-                hostUid: activeUser.uid,
-                status: 'waiting',
-                turn: activeUser.uid,
-                lastRoll: 0,
-                lastActionLog: "Xona ochildi. Ishtirokchilar kutilmoqda.",
+        /* =========================================================================
+           PART 2: LOBBY & ROOM MANAGEMENT (MAXFIY XONA TIZIMI)
+           ========================================================================= */
+
+        // Xona yaratish
+        document.getElementById('btn-create-room').addEventListener('click', async () => {
+            let roomName = document.getElementById('room-name-input').value.trim();
+            const maxPlayers = parseInt(document.getElementById('room-max-players').value);
+
+            if(!roomName) {
+                roomName = `Yashirin Matbaa #${Math.floor(1000 + Math.random() * 9000)}`;
+            }
+
+            const roomRef = push(ref(db, 'jadidlar_rooms'));
+            const newRoomId = roomRef.key;
+
+            const initialRoomState = {
+                roomId: newRoomId,
+                roomName: roomName,
+                maxPlayers: maxPlayers,
+                hostId: currentUser.uid,
+                status: "waiting", // waiting | playing | deduction | finished
+                enlightenment: 0,
+                danger: 0,
+                turnCount: 0,
+                currentTurnIndex: 0,
+                playerOrder: [],
+                winner: null,
                 players: {
-                    [activeUser.uid]: {
-                        uid: activeUser.uid,
-                        email: activeUser.email,
-                        balance: 1500,
-                        position: 0,
-                        isBankrupt: false,
-                        inJail: false,
-                        jailTurnsLeft: 0,
-                        joinedAt: Date.now()
+                    [currentUser.uid]: {
+                        uid: currentUser.uid,
+                        name: currentUser.displayName || "Noma'lum Ziyoli",
+                        isAlive: true,
+                        role: "none", // none | jadid | spy
+                        votedFor: "none"
                     }
-                },
-                properties: {},
-                houses: {},     // Katak indeksi bo'yicha uylar soni (0-4)
-                mortgaged: {}   // Katak indeksi bo'yicha true/false
+                }
             };
 
             try {
-                await set(targetRef, roomBlueprint);
-                bindRoomRealtimeStream(generatedCode);
-            } catch(e) {
-                lobbyErrorBox.innerText = "Xona yaratib bo'lmadi: " + e.message;
-                lobbyErrorBox.classList.remove('hidden');
+                await set(roomRef, initialRoomState);
+                document.getElementById('room-name-input').value = '';
+                joinRoomWorkflow(newRoomId);
+            } catch(error) {
+                showToast("Xona yaratishda xatolik yuz berdi", "error");
             }
         });
 
-        document.getElementById('btn-lobby-join').addEventListener('click', async () => {
-            SoundFX.play('click');
-            lobbyErrorBox.classList.add('hidden');
-            const targetCode = document.getElementById('inp-lobby-code').value.trim().toUpperCase();
+        // Faol xonalarni real vaqtda kuzatish va render qilish
+        function initLobbyRooms() {
+            const roomsRef = ref(db, 'jadidlar_rooms');
+            if(activeRoomsListener) off(roomsRef, 'value', activeRoomsListener);
 
-            if(targetCode.length !== 6) {
-                lobbyErrorBox.innerText = "Xona kodi qat'iy 6 belgidan iborat.";
-                lobbyErrorBox.classList.remove('hidden');
-                return;
-            }
+            activeRoomsListener = onValue(roomsRef, (snapshot) => {
+                const container = document.getElementById('rooms-list-container');
+                container.innerHTML = '';
+                const data = snapshot.val();
 
-            try {
-                const roomSnap = await get(ref(db, `rooms/${targetCode}`));
-                if(!roomSnap.exists()) {
-                    lobbyErrorBox.innerText = "Bunday kodli xona tizimda topilmadi.";
-                    lobbyErrorBox.classList.remove('hidden');
+                if(!data) {
+                    container.innerHTML = `
+                    <div class="text-center py-12 text-stone-500 text-sm italic border border-dashed border-stone-800">
+                        Hozircha hech qanday maxfiy matbaa xonasi aniqlanmadi. Chap tomondan yangi xona yarating.
+                    </div>`;
+                    document.getElementById('active-rooms-count').innerText = "Xonalar: 0";
                     return;
                 }
 
-                const roomObj = roomSnap.val();
-                if(roomObj.status !== 'waiting') {
-                    lobbyErrorBox.innerText = "O'yin boshlanib ketgan yoki yopilgan.";
-                    lobbyErrorBox.classList.remove('hidden');
-                    return;
-                }
+                const roomsArray = Object.values(data);
+                document.getElementById('active-rooms-count').innerText = `Xonalar: ${roomsArray.length}`;
 
-                const heavyCount = roomObj.players ? Object.keys(roomObj.players).length : 0;
-                if(heavyCount >= 4) {
-                    lobbyErrorBox.innerText = "Xonada joy qolmagan (Maksimal 4 kishi).";
-                    lobbyErrorBox.classList.remove('hidden');
-                    return;
-                }
+                roomsArray.forEach(room => {
+                    const pCount = room.players ? Object.keys(room.players).length : 0;
+                    
+                    // Faqat kutish zalidagi yoki to'lmagan xonalarni ko'rsatish sharti (yoki hammasi tahlili)
+                    const isFull = pCount >= room.maxPlayers;
+                    const isPlaying = room.status !== 'waiting';
+                    
+                    let statusBadge = `<span class="border border-stone-700 px-2 py-0.5 text-[10px] uppercase text-stone-400">Kutilmoqda</span>`;
+                    if(isPlaying) {
+                        statusBadge = `<span class="border border-stone-800 bg-stone-900 px-2 py-0.5 text-[10px] uppercase text-stone-500">O'yin ketmoqda</span>`;
+                    } else if(isFull) {
+                        statusBadge = `<span class="border border-stone-700 px-2 py-0.5 text-[10px] uppercase text-stone-300">To'lgan</span>`;
+                    }
 
-                if(!roomObj.players || !roomObj.players[activeUser.uid]) {
-                    await set(ref(db, `rooms/${targetCode}/players/${activeUser.uid}`), {
-                        uid: activeUser.uid,
-                        email: activeUser.email,
-                        balance: 1500,
-                        position: 0,
-                        isBankrupt: false,
-                        inJail: false,
-                        jailTurnsLeft: 0,
-                        joinedAt: Date.now()
+                    const card = document.createElement('div');
+                    card.className = "border border-stone-800 bg-stone-950 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition hover:border-stone-600";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="serif-title font-bold text-stone-200">${room.roomName}</h4>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-xs text-stone-400 font-mono mt-1">Hajm: ${pCount}/${room.maxPlayers} o'yinchi • ID: ${room.roomId.substring(0,6)}...</p>
+                        </div>
+                        <button ${isPlaying || isFull ? 'disabled' : ''} data-id="${room.roomId}" class="btn-join-room-trigger w-full sm:w-auto text-xs font-bold uppercase tracking-widest px-4 py-2 border ${
+                            isPlaying || isFull 
+                            ? 'border-stone-900 text-stone-600 cursor-not-allowed' 
+                            : 'border-stone-400 text-stone-200 hover:bg-stone-200 hover:text-stone-950 cursor-pointer'
+                        } transition">
+                            Qo'shilish
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Qo'shilish tugmalari eventlari
+                document.querySelectorAll('.btn-join-room-trigger').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const rId = e.target.getAttribute('data-id');
+                        joinRoomWorkflow(rId);
                     });
+                });
+            });
+        }
+
+        // Xonaga kirish mantig'i transaktsiya bilan (Ustma-ust kirib ketishni oldini olish)
+        async function joinRoomWorkflow(roomId) {
+            const playerRoomRef = ref(db, `jadidlar_rooms/${roomId}`);
+            
+            try {
+                const result = await runTransaction(playerRoomRef, (currentData) => {
+                    if (currentData) {
+                        if (!currentData.players) currentData.players = {};
+                        
+                        // Agar o'yinchi xonada allaqachon bo'lsa
+                        if (currentData.players[currentUser.uid]) {
+                            return currentData;
+                        }
+
+                        const pCount = Object.keys(currentData.players).length;
+                        if (pCount >= currentData.maxPlayers) {
+                            return; // Xona to'lgan, bekor qilish
+                        }
+                        if (currentData.status !== 'waiting') {
+                            return; // O'yin boshlanib ketgan
+                        }
+
+                        // O'yinchini qo'shish
+                        currentData.players[currentUser.uid] = {
+                            uid: currentUser.uid,
+                            name: currentUser.displayName || "Noma'lum Ziyoli",
+                            isAlive: true,
+                            role: "none",
+                            votedFor: "none"
+                        };
+                        return currentData;
+                    }
+                    return currentData;
+                });
+
+                if (!result.committed) {
+                    showToast("Xonaga qo'shilish imkonsiz: Xona to'lgan yoki o'yin boshlangan", "error");
+                    return;
                 }
 
-                bindRoomRealtimeStream(targetCode);
-            } catch(e) {
-                lobbyErrorBox.innerText = "Ulanishda xato: " + e.message;
-                lobbyErrorBox.classList.remove('hidden');
+                currentRoomId = roomId;
+                showScreen('waiting');
+                attachRoomListener(roomId);
+
+            } catch(error) {
+                showToast("Kirish jarayonida kutilmagan xatolik", "error");
             }
-        });
+        }
 
 
-        // --- Live Realtime Synchronizer Core ---
-        function bindRoomRealtimeStream(roomId) {
-            currentRoomId = roomId;
-            if(databaseListenerRef) databaseListenerRef(); // Unsubscribe precedent
+        /* =========================================================================
+           PART 3: ROOM LISTENERS & LIVE LOGIC (KUTISH VA O'YIN KUZATUVI)
+           ========================================================================= */
 
-            const targetedRoomRef = ref(db, `rooms/${roomId}`);
-            databaseListenerRef = onValue(targetedRoomRef, (snap) => {
-                if(!snap.exists()) {
+        function detachRoomListener() {
+            if(currentRoomListener) {
+                off(ref(db, `jadidlar_rooms/${currentRoomId}`), 'value', currentRoomListener);
+                currentRoomListener = null;
+            }
+            if(deductionTimerInterval) {
+                clearInterval(deductionTimerInterval);
+                deductionTimerInterval = null;
+            }
+        }
+
+        function attachRoomListener(roomId) {
+            const targetRoomRef = ref(db, `jadidlar_rooms/${roomId}`);
+            
+            currentRoomListener = onValue(targetRoomRef, (snapshot) => {
+                const data = snapshot.val();
+                currentRoomData = data;
+
+                // Xona o'chirilgan yoki tizim tomonidan tugatilgan bo'lsa
+                if(!data) {
+                    detachRoomListener();
                     if(currentRoomId) {
                         currentRoomId = null;
-                        triggerToast("Xona egasi chiqib ketganligi sababli sessiya bekor qilindi.");
-                        navigateToScreen('view-lobby');
+                        showScreen('lobby');
+                        showToast("Xona yopildi yoki tizim aloqani uzdi.");
                     }
                     return;
                 }
 
-                const freshRoomData = snap.val();
+                const playersList = data.players ? Object.values(data.players) : [];
+                const pCount = playersList.length;
 
-                // Agar o'yinchi ro'yxatdan majburiy chetlatilgan yoki chiqib ketgan bo'lsa
-                if(!freshRoomData.players || !freshRoomData.players[activeUser.uid]) {
-                    currentRoomId = null;
-                    navigateToScreen('view-lobby');
-                    return;
+                // 1. KUTISH ZALI HOLATI (WAITING STAGE)
+                if(data.status === 'waiting') {
+                    showScreen('waiting');
+                    document.getElementById('wait-room-id').innerText = `XONA ID: ${data.roomId}`;
+                    document.getElementById('wait-room-title').innerText = data.roomName;
+                    document.getElementById('wait-players-count').innerText = `${pCount}/${data.maxPlayers}`;
+                    
+                    const listContainer = document.getElementById('wait-players-list');
+                    listContainer.innerHTML = '';
+
+                    playersList.forEach(p => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = "border border-stone-800 bg-stone-950 p-3 flex items-center gap-3 relative";
+                        wrapper.innerHTML = `
+                            <div class="w-10 h-10 border border-stone-700 bg-stone-900 shrink-0">
+                                ${generateVintageAvatar(p.name)}
+                            </div>
+                            <div class="overflow-hidden">
+                                <p class="text-sm font-bold text-stone-200 truncate">${p.name}</p>
+                                <p class="text-[10px] font-mono text-stone-500 uppercase tracking-widest">${p.uid === data.hostId ? 'Tashkilotchi' : 'Ziyoli'}</p>
+                            </div>
+                        `;
+                        listContainer.appendChild(wrapper);
+                    });
+
+                    // Xona boshlig'i (host) va yetarli o'yinchi tekshiruvi -> O'yinni Avtomatik yoki Host tomonidan boshlash
+                    if(pCount === data.maxPlayers && data.hostId === currentUser.uid) {
+                        document.getElementById('wait-status-msg').innerHTML = `<span class="text-stone-200 font-bold animate-pulse">Rollarni taqsimlash tayyorlanmoqda...</span>`;
+                        // Host uchun o'yinni trigger qilish
+                        setTimeout(() => {
+                            launchGameEngine(roomId, playersList, data.maxPlayers);
+                        }, 2000);
+                    } else {
+                        document.getElementById('wait-status-msg').innerText = `Boshqa ziyolilarning qo'shilishini kutilmoqda (${pCount}/${data.maxPlayers})...`;
+                    }
                 }
 
-                // SPA status routing
-                if(freshRoomData.status === 'waiting') {
-                    navigateToScreen('view-waiting');
-                    renderWaitingView(freshRoomData);
-                } else if(freshRoomData.status === 'playing') {
-                    navigateToScreen('view-game');
-                    renderGameView(freshRoomData);
+                // 2. ASOSIY O'YIN VA FOSH ETISH FAZALARI
+                if(data.status === 'playing' || data.status === 'deduction') {
+                    showScreen('game');
+                    renderActiveGameBoard(data);
+                }
+
+                // 3. O'YIN TUGAGANDA MODALNI CHIQARISH
+                if(data.status === 'finished') {
+                    showScreen('game');
+                    renderActiveGameBoard(data); // Oxirgi statni ko'rsatish
+                    triggerGameOverModal(data);
                 }
             });
+
+            // CHAT TIZIMINI ISHGA TUSHIRISH
+            initChatSystem(roomId);
         }
 
-        // --- Render Waiting Mechanism ---
-        function renderWaitingView(room) {
-            document.getElementById('txt-wait-roomcode').innerText = room.roomId;
-            const container = document.getElementById('box-waiting-list');
-            container.innerHTML = '';
+        // KUTISH ZALIDAN CHIQISH (LEAVE ROOM)
+        document.getElementById('btn-leave-waiting').addEventListener('click', () => leaveRoomProcedure());
+        document.getElementById('btn-game-quit').addEventListener('click', () => leaveRoomProcedure());
 
-            // Joined sorted flow
-            const sortedPlayers = Object.values(room.players).sort((a,b) => a.joinedAt - b.joinedAt);
-            
-            sortedPlayers.forEach((p, idx) => {
-                const colorToken = visualColors[idx] || visualColors[0];
-                const isHost = p.uid === room.hostUid;
-
-                const node = document.createElement('div');
-                node.className = `p-4 bg-slate-950/60 border border-white/5 rounded-xl flex items-center justify-between shadow-inner`;
-                node.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full ${colorToken.bg} border ${colorToken.border}"></div>
-                        <span class="text-xs font-bold text-slate-200">${p.email}</span>
-                        ${isHost ? `<span class="text-[9px] font-black uppercase text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-500/20">Lider</span>` : ''}
-                    </div>
-                    <span class="text-[10px] text-slate-500 font-extrabold uppercase">Tayyor</span>
-                `;
-                container.appendChild(node);
-            });
-
-            const startBtn = document.getElementById('btn-wait-start');
-            if(activeUser.uid === room.hostUid) {
-                startBtn.classList.remove('hidden');
-                startBtn.disabled = sortedPlayers.length < 2; // Haqiqiy multiplayer uchun kamida 2 kishi shart
-            } else {
-                startBtn.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('btn-wait-leave').addEventListener('click', () => {
-            SoundFX.play('click');
-            executeLeaveSequence();
-        });
-
-        async function executeLeaveSequence() {
+        async function leaveRoomProcedure() {
             if(!currentRoomId) return;
-            const targetId = currentRoomId;
-            
-            if(databaseListenerRef) databaseListenerRef();
+            const rId = currentRoomId;
+            detachRoomListener();
             currentRoomId = null;
 
             try {
-                const snap = await get(ref(db, `rooms/${targetId}`));
-                if(snap.exists()) {
-                    const room = snap.val();
-                    if(room.hostUid === activeUser.uid) {
-                        // Agar xona egasi chiqsa butun xonani tugatish
-                        await remove(ref(db, `rooms/${targetId}`));
-                    } else {
-                        // Oddiy o'yinchi chiqsa faqat o'zini o'chirish
-                        await remove(ref(db, `rooms/${targetId}/players/${activeUser.uid}`));
-                        // Navbat unda bo'lgan bo'lsa navbatni uzatish
-                        if(room.turn === activeUser.uid) {
-                            await update(ref(db, `rooms/${targetId}`), { turn: room.hostUid });
+                const targetRef = ref(db, `jadidlar_rooms/${rId}`);
+                // Transaktsiya orqali o'yinchini o'chirish yoki xonani butunlay yo'q qilish
+                await runTransaction(targetRef, (room) => {
+                    if (room) {
+                        if (room.players && room.players[currentUser.uid]) {
+                            delete room.players[currentUser.uid];
                         }
+                        const leftCount = room.players ? Object.keys(room.players).length : 0;
+                        
+                        // Agar xonada hech kim qolmasa yoki o'yin qizg'in vaqtda kimdir chiqib ketgan bo'lsa -> Butunlay yopish
+                        if (leftCount === 0 || room.status === 'playing' || room.status === 'deduction') {
+                            return null; // Firebase'dan xonani butunlay o'chiradi
+                        }
+                        
+                        // Agar xona boshlig'i chiqsa, boshliqni almashtirish
+                        if (room.hostId === currentUser.uid && leftCount > 0) {
+                            room.hostId = Object.keys(room.players)[0];
+                        }
+                        return room;
                     }
-                }
-            } catch(e) { console.error("Leave sequence error", e); }
-            navigateToScreen('view-lobby');
+                    return room;
+                });
+
+                showToast("Siz maxfiy tahririyatni tark etdingiz.");
+                showScreen('lobby');
+                initLobbyRooms();
+            } catch(error) {
+                showScreen('lobby');
+            }
         }
 
-        document.getElementById('btn-wait-start').addEventListener('click', async () => {
-            SoundFX.play('click');
-            if(!currentRoomId) return;
-            await update(ref(db, `rooms/${currentRoomId}`), {
-                status: 'playing',
-                lastActionLog: "O'yin start oldi! Ilk qadam xona rahbarida."
+
+        /* =========================================================================
+           PART 4: GAME ENGINE & INITIALIZATION (ROLLARNI TAQSIMLASH MANTIQLARI)
+           ========================================================================= */
+
+        async function launchGameEngine(roomId, playersList, maxPlayers) {
+            // Rollarni tasodifiy taqsimlash algoritmi
+            // 2-3 kishilik o'yinda 1 ta Josus, qolganlar Jadid. 4 kishilikda ham 1 ta Josus yetarli jiddiy muvozanat uchun.
+            const uids = playersList.map(p => p.uid);
+            const spyIndex = Math.floor(Math.random() * uids.length);
+            const spyUid = uids[spyIndex];
+
+            const updates = {};
+            const playerOrder = [];
+
+            uids.forEach((uid) => {
+                const assignedRole = (uid === spyUid) ? "spy" : "jadid";
+                updates[`jadidlar_rooms/${roomId}/players/${uid}/role`] = assignedRole;
+                playerOrder.push(uid);
             });
-        });
 
+            // O'yin tartibini va birinchi navbatni sozlash
+            updates[`jadidlar_rooms/${roomId}/playerOrder`] = playerOrder;
+            updates[`jadidlar_rooms/${roomId}/status`] = "playing";
+            updates[`jadidlar_rooms/${roomId}/currentTurnIndex`] = 0;
+            updates[`jadidlar_rooms/${roomId}/turnCount`] = 0;
+            updates[`jadidlar_rooms/${roomId}/enlightenment`] = 0;
+            updates[`jadidlar_rooms/${roomId}/danger"] = 0;
 
-        // ================= FULL GAMEPLAY LOGIC & RENDER ENGINE =================
-        function renderGameView(room) {
-            const playersList = Object.values(room.players).sort((a,b) => a.joinedAt - b.joinedAt);
-            const playerUidsOrder = playersList.map(p => p.uid);
-            
-            const activePlayerTurnObj = room.players[room.turn];
-            if(activePlayerTurnObj) {
-                document.getElementById('lbl-game-turn').innerText = activePlayerTurnObj.email.split('@')[0];
+            try {
+                await update(ref(db), updates);
+                // Matbaa kundaligiga tizim xabari
+                sendSystemChatMessage(roomId, "Tahririyat kengashi boshlandi. Rollar yashirincha taqsimlandi. Harakatni boshlang!");
+            } catch(error) {
+                showToast("O'yinni ishga tushirishda xatolik", "error");
             }
-            document.getElementById('lbl-game-log').innerText = room.lastActionLog;
-            document.getElementById('ui-dice').innerText = room.lastRoll > 0 ? room.lastRoll : '-';
+        }
 
-            // 1. Dashboard render operatsiyasi
-            const dashboardContainer = document.getElementById('box-game-players');
-            dashboardContainer.innerHTML = '';
 
-            playerUidsOrder.forEach((uid) => {
+        /* =========================================================================
+           PART 5: GAMEPLAY REALTIME RENDERING (JANG MAYDONI INTERFEYSI)
+           ========================================================================= */
+
+        function renderActiveGameBoard(room) {
+            // 1. Tepada: O'yinchilar ro'yxatini real vaqtda render qilish
+            const playersContainer = document.getElementById('game-players-container');
+            playersContainer.innerHTML = '';
+
+            const order = room.playerOrder || [];
+            const currentTurnUid = order[room.currentTurnIndex];
+
+            order.forEach(uid => {
                 const p = room.players[uid];
-                const metaIndex = playerUidsOrder.indexOf(uid);
-                const colorMeta = visualColors[metaIndex] || visualColors[0];
-                const activeTurnBorder = p.uid === room.turn ? 'border-2 border-indigo-500' : 'border border-white/5';
+                if(!p) return;
 
-                const row = document.createElement('div');
-                row.className = `p-3 rounded-xl flex items-center justify-between ${activeTurnBorder} ${p.isBankrupt ? 'opacity-25 bg-rose-950/20' : 'bg-slate-900/50'}`;
-                row.style.background = p.uid === room.turn ? `linear-gradient(90deg, ${colorMeta.fill} 0%, rgba(13,17,33,0.5) 100%)` : '';
+                const isCurrent = uid === currentTurnUid && room.status === 'playing';
                 
-                row.innerHTML = `
-                    <div class="flex flex-col min-w-0">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full ${colorMeta.bg}"></div>
-                            <span class="text-xs font-bold text-white truncate max-w-[130px]">${p.email.split('@')[0]}</span>
-                        </div>
-                        <span class="text-[9px] text-slate-400 font-medium mt-0.5">Kataki: ${p.position} | ${boardMatrix[p.position].name}</span>
+                const card = document.createElement('div');
+                card.className = `border p-3 flex flex-col items-center relative text-center bg-stone-950 transition ${
+                    isCurrent ? 'border-stone-300 ring-1 ring-stone-400' : 'border-stone-800'
+                } ${!p.isAlive ? 'opacity-40' : ''}`;
+
+                card.innerHTML = `
+                    <div class="w-14 h-14 border border-stone-800 bg-stone-900 mb-2 relative">
+                        ${generateVintageAvatar(p.name, !p.isAlive)}
                     </div>
-                    <div class="text-right flex flex-col items-end flex-shrink-0">
-                        <span class="text-xs font-black text-yellow-400">$${p.balance}</span>
-                        ${p.isBankrupt ? `<span class="text-[8px] font-black uppercase text-rose-500 bg-rose-500/10 px-1 rounded mt-0.5">Bankrot</span>` : 
-                          (p.inJail ? `<span class="text-[8px] font-black uppercase text-orange-400 bg-orange-400/10 px-1 rounded mt-0.5">Qamoqda (${p.jailTurnsLeft})</span>` : '')}
+                    <div class="w-full">
+                        <p class="text-xs font-bold text-stone-200 truncate">${p.name}</p>
+                        <p class="text-[9px] font-mono mt-0.5 tracking-tight ${isCurrent ? 'text-stone-300 font-bold' : 'text-stone-500'}">
+                            ${!p.isAlive ? 'SURGUNDA' : isCurrent ? '• NAVBATIY YURISH •' : 'KUTILMOQDA'}
+                        </p>
                     </div>
                 `;
-                dashboardContainer.appendChild(row);
+                playersContainer.appendChild(card);
             });
 
-            // 2. Map Cells Clean & Redraw cycle
-            for(let i=0; i<16; i++) {
-                const cellDom = document.getElementById(`cell-${i}`);
-                const tokenContainer = cellDom.querySelector('.token-holder');
-                const houseContainer = cellDom.querySelector('.house-holder');
-                
-                if(tokenContainer) tokenContainer.innerHTML = '';
-                if(houseContainer) houseContainer.innerHTML = '';
-
-                // Mulk rang chizig'ini yangilash / Garov (mortgage) holati vizualizatsiyasi
-                if(room.properties && room.properties[i]) {
-                    const ownerUid = room.properties[i];
-                    const ownerIdx = playerUidsOrder.indexOf(ownerUid);
-                    if(ownerIdx !== -1) {
-                        const isMortgaged = room.mortgaged && room.mortgaged[i];
-                        if(isMortgaged) {
-                            cellDom.style.borderColor = '#475569'; // Garovdagi xira rang
-                            cellDom.style.opacity = '0.6';
-                        } else {
-                            cellDom.style.borderColor = visualColors[ownerIdx].hex;
-                            cellDom.style.opacity = '1';
-                        }
-                    }
-                } else {
-                    cellDom.style.borderColor = 'transparent';
-                    cellDom.style.opacity = '1';
-                }
-
-                // Uylarni (houses) vizual joylash
-                if(room.houses && room.houses[i] > 0) {
-                    const count = room.houses[i];
-                    if(houseContainer) {
-                        for(let h=0; h<count; h++) {
-                            houseContainer.innerHTML += '🏠';
-                        }
-                    }
-                }
-            }
-
-            // 3. Figuralarni (Tokens) kataklarga qayta chizish
-            playerUidsOrder.forEach((uid, idx) => {
-                const p = room.players[uid];
-                if(!p.isBankrupt) {
-                    const specificCell = document.getElementById(`cell-${p.position}`);
-                    if(specificCell) {
-                        const holder = specificCell.querySelector('.token-holder');
-                        if(holder) {
-                            const visualDot = document.createElement('div');
-                            visualDot.className = `w-2.5 h-2.5 rounded-full ${visualColors[idx].bg} border border-white shadow-xl transform scale-110 animate-pulse`;
-                            holder.appendChild(visualDot);
-                        }
-                    }
-                }
-            });
-
-            // 4. Controller va Modal oynalar qarorlar zanjiri
-            const localPlayer = room.players[activeUser.uid];
-            const diceBtn = document.getElementById('btn-game-roll');
-            const quickManagementBlock = document.getElementById('box-quick-management');
-
-            if(pessimistCheckGameOver(room)) {
-                triggerVictorySequence(room);
-                return;
-            }
-
-            if(room.turn === activeUser.uid && !localPlayer.isBankrupt) {
-                // Tezkor boshqaruv panelini ko'rsatish
-                quickManagementBlock.classList.remove('hidden');
-                
-                // Qamoqxona variantlar paneli yoki Oddiy yurish tekshiruvi
-                if(localPlayer.inJail) {
-                    diceBtn.disabled = true;
-                    showJailControls(localPlayer);
-                } else {
-                    hideJailControls();
-                    
-                    // Sotib olish dialogi zanjirini tekshirish
-                    const cPos = localPlayer.position;
-                    const cData = boardMatrix[cPos];
-                    const hasOwner = room.properties && room.properties[cPos];
-
-                    if(cData.type === 'property' && !hasOwner && room.lastActionLog.includes("kelib qo'ndi")) {
-                        diceBtn.disabled = true;
-                        showBuyRequestModal(cPos, cData);
-                    } else {
-                        diceBtn.disabled = false;
-                        hideBuyRequestModal();
-                    }
-                }
-            } else {
-                // Raqib navbatida barchasini bloklash
-                diceBtn.disabled = true;
-                quickManagementBlock.classList.add('hidden');
-                hideBuyRequestModal();
-                hideJailControls();
-            }
-        }
-
-        // --- Modals Toggle Controls ---
-        function showBuyRequestModal(pos, data) {
-            document.getElementById('core-state-neutral').classList.add('hidden');
-            document.getElementById('core-state-buy-request').classList.remove('hidden');
-            document.getElementById('core-state-buy-request').classList.add('flex');
-            document.getElementById('lbl-modal-title').innerText = data.name;
-            document.getElementById('lbl-modal-cost').innerText = `$${data.cost}`;
-        }
-        function hideBuyRequestModal() {
-            document.getElementById('core-state-buy-request').classList.add('hidden');
-            document.getElementById('core-state-neutral').classList.remove('hidden');
-        }
-        function showJailControls(player) {
-            document.getElementById('core-state-neutral').classList.add('hidden');
-            document.getElementById('core-state-jail-options').classList.remove('hidden');
-            document.getElementById('core-state-jail-options').classList.add('flex');
-            document.getElementById('lbl-jail-turns-left').innerText = player.jailTurnsLeft;
-        }
-        function hideJailControls() {
-            document.getElementById('core-state-jail-options').classList.add('hidden');
-        }
-
-        // ================= ALGORITMIK YURISH VA QAMOQ MEHANIZMI =================
-        document.getElementById('btn-game-roll').addEventListener('click', async () => {
-            if(!currentRoomId) return;
-            const diceBtn = document.getElementById('btn-game-roll');
-            diceBtn.disabled = true;
-
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
-
-            if(room.turn !== activeUser.uid) return;
-
-            // Zar animatsiyasi simulyatsiyasi
-            SoundFX.play('dice');
-            let mockTicks = 0;
-            const timer = setInterval(() => {
-                document.getElementById('ui-dice').innerText = Math.floor(Math.random() * 6) + 1;
-                mockTicks++;
-                if(mockTicks > 4) {
-                    clearInterval(timer);
-                    finalizeRollMovement(room);
-                }
-            }, 80);
-        });
-
-        async function finalizeRollMovement(room) {
-            const dice1 = Math.floor(Math.random() * 6) + 1;
-            const player = room.players[activeUser.uid];
+            // 2. Markazda: Real vaqtda progress-bar ko'rsatkichlari
+            document.getElementById('stat-enlightenment-txt').innerText = `${room.enlightenment}%`;
+            document.getElementById('stat-enlightenment-bar').style.width = `${room.enlightenment}%`;
             
-            let oldPos = player.position;
-            let newPos = (oldPos + dice1) % 16;
-            let currentBalance = player.balance;
-            let log = `${player.email.split('@')[0]} zar tashladi: ${dice1}. `;
+            document.getElementById('stat-danger-txt').innerText = `${room.danger}%`;
+            document.getElementById('stat-danger-bar').style.width = `${room.danger}%`;
 
-            // START o'tish mukofoti
-            if(newPos < oldPos) {
-                currentBalance += 200;
-                log += "START'dan o'tgani uchun +$200 mukofot! ";
+            document.getElementById('game-turn-counter').innerText = `Faza yurishlari: ${room.turnCount} / 3`;
+
+            // Navbat matni indicatorini yangilash
+            const activePlayerObj = room.players[currentTurnUid];
+            if(activePlayerObj && room.status === 'playing') {
+                document.getElementById('game-current-turn-indicator').innerText = `Navbat: ${activePlayerObj.name}`;
+            } else if(room.status === 'deduction') {
+                document.getElementById('game-current-turn-indicator').innerText = `Navbat: FOSH ETISH BOSQICHI`;
+            } else {
+                document.getElementById('game-current-turn-indicator').innerText = `O'yin Yakunlandi`;
             }
 
-            log += `[${boardMatrix[newPos].name}] katagiga kelib qo'ndi.`;
+            // Foydalanuvchining shaxsiy yashirin roli va unga mos kartalarni yuklash
+            const myData = room.players[currentUser.uid];
+            if(myData) {
+                const roleBox = document.getElementById('user-secret-role-box');
+                if(myData.role === 'jadid') {
+                    roleBox.innerHTML = `Yashirin Rolingiz: <span class="text-stone-300 font-bold uppercase tracking-wider">Ma'rifatparvar (Jadid)</span>`;
+                } else if(myData.role === 'spy') {
+                    roleBox.innerHTML = `Yashirin Rolingiz: <span class="text-stone-400 font-bold uppercase tracking-wider animate-pulse">Chaqimchi (Josus)</span>`;
+                }
 
-            // Maxsus kataklar logikasi
-            if(newPos === 12) {
-                // Mumtoz qamoqqa jo'natish
-                newPos = 4;
-                let updates = {};
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/position`] = 4;
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/inJail`] = true;
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/jailTurnsLeft`] = 3;
-                updates[`rooms/${currentRoomId}/lastRoll`] = dice1;
-                updates[`rooms/${currentRoomId}/lastActionLog`] = log + " Qamoqqa hukm qilindi (3 muddat).";
-                updates[`rooms/${currentRoomId}/turn`] = rotateNextTurnSequence(room, activeUser.uid);
-                SoundFX.play('jail');
-                await update(ref(db), updates);
-                return;
-            }
-
-            let finalUpdates = {};
-            finalUpdates[`rooms/${currentRoomId}/players/${activeUser.uid}/position`] = newPos;
-            finalUpdates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = currentBalance;
-            finalUpdates[`rooms/${currentRoomId}/lastRoll`] = dice1;
-            finalUpdates[`rooms/${currentRoomId}/lastActionLog`] = log;
-
-            // Avtomatik ijara (Rent) zanjiri va Uy hisoblari
-            const targetCell = boardMatrix[newPos];
-            if(targetCell.type === 'property' && room.properties && room.properties[newPos]) {
-                const ownerId = room.properties[newPos];
-                const isMortgaged = room.mortgaged && room.mortgaged[newPos];
-
-                if(ownerId !== activeUser.uid && !room.players[ownerId].isBankrupt && !isMortgaged) {
-                    // Qurilgan uylar soniga qarab ijara geometrik oshadi
-                    const houseCount = (room.houses && room.houses[newPos]) ? room.houses[newPos] : 0;
-                    let rentCalculated = targetCell.baseRent + (houseCount * targetCell.baseRent * 2);
-
-                    currentBalance -= rentCalculated;
-                    const ownerNewBalance = room.players[ownerId].balance + rentCalculated;
-
-                    finalUpdates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = currentBalance;
-                    finalUpdates[`rooms/${currentRoomId}/players/${ownerId}/balance`] = ownerNewBalance;
-                    
-                    let rentStr = ` Avtomatik ijara: ${room.players[ownerId].email.split('@')[0]}ga $${rentCalculated} to'ladi.`;
-                    
-                    if(currentBalance <= 0) {
-                        finalUpdates[`rooms/${currentRoomId}/players/${activeUser.uid}/isBankrupt`] = true;
-                        finalUpdates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = 0;
-                        rentStr += " Va BANKROT bo'ldi!";
-                        finalUpdates = wipeBankruptAssets(room, activeUser.uid, finalUpdates);
-                    }
-                    finalUpdates[`rooms/${currentRoomId}/lastActionLog`] = log + rentStr;
-                    SoundFX.play('rent');
+                // Kartalarni faqat tirik bo'lsa va o'yin holatida render qilish
+                if(room.status === 'playing') {
+                    const isMyTurn = currentUser.uid === currentTurnUid;
+                    renderActionCards(myData.role, isMyTurn && myData.isAlive);
+                } else {
+                    document.getElementById('action-cards-container').innerHTML = `
+                    <div class="col-span-3 text-center py-4 text-stone-500 text-xs italic border border-dashed border-stone-800">
+                        Fosh etish fazasida yoki boshqa holatda harakat kartalari bloklanadi.
+                    </div>`;
                 }
             }
 
-            // Agar egasiz mulk bo'lsa navbat dialogni kutadi, aks holda keyingisiga o'tadi
-            const cellOwner = room.properties ? room.properties[newPos] : null;
-            if(targetCell.type !== 'property' || cellOwner || currentBalance <= 0) {
-                finalUpdates[`rooms/${currentRoomId}/turn`] = rotateNextTurnSequence(room, activeUser.uid);
+            // 3. Fosh etish fazasi overlay nazorati
+            const overlay = document.getElementById('deduction-overlay');
+            if(room.status === 'deduction') {
+                overlay.classList.remove('hidden');
+                setupDeductionPhaseUI(room);
+            } else {
+                overlay.classList.add('hidden');
+                if(deductionTimerInterval) {
+                    clearInterval(deductionTimerInterval);
+                    deductionTimerInterval = null;
+                }
             }
-
-            await update(ref(db), finalUpdates);
         }
 
-        // --- Qamoqdan Chiqish Variantlari ---
-        document.getElementById('btn-jail-pay').addEventListener('click', async () => {
-            SoundFX.play('click');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
-            const player = room.players[activeUser.uid];
+        // RO'LGA MOS HARAKAT KARTALARINI RENDER QILISH MANTIQLARI
+        function renderActionCards(role, isMyTurn) {
+            const container = document.getElementById('action-cards-container');
+            container.innerHTML = '';
 
-            if(player.balance < 50) {
-                triggerToast("Jarima to'lash uchun yetarli pulingiz yo'q!");
-                return;
-            }
-
-            let updates = {};
-            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = player.balance - 50;
-            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/inJail`] = false;
-            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/jailTurnsLeft`] = 0;
-            updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} $50 jarima to'lab zindondan ozod bo'ldi.`;
-            // Ozod bo'lgach o'sha zahoti zar tashlash huquqi beriladi
-            hideJailControls();
-            await update(ref(db), updates);
-        });
-
-        document.getElementById('btn-jail-roll').addEventListener('click', async () => {
-            SoundFX.play('dice');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
-            const player = room.players[activeUser.uid];
-
-            // Omaddan kelib chiqib dubl tekshiruvi (Bizning mini monopoliya zar tizimida 6 chiqsa dubl deb hisoblaymiz)
-            const luckyDice = Math.floor(Math.random() * 6) + 1;
-            document.getElementById('ui-dice').innerText = luckyDice;
-
-            let updates = {};
-            if(luckyDice === 6) {
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/inJail`] = false;
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/jailTurnsLeft`] = 0;
-                updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} zarda 6 chiqarib, qamoqdan bepul chiqdi!`;
-            } else {
-                const turnsLeft = player.jailTurnsLeft - 1;
-                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/jailTurnsLeft`] = turnsLeft;
-                
-                if(turnsLeft <= 0) {
-                    // Muddat tugadi, majburiy jarima bilan chiqadi
-                    const finalBal = Math.max(0, player.balance - 50);
-                    updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = finalBal;
-                    updates[`rooms/${currentRoomId}/players/${activeUser.uid}/inJail`] = false;
-                    updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} muddati tugab majburiy $50 to'lov bilan chiqdi.`;
-                    if(finalBal <= 0 && player.balance > 0) {
-                        updates[`rooms/${currentRoomId}/players/${activeUser.uid}/isBankrupt`] = true;
-                        updates = wipeBankruptAssets(room, activeUser.uid, updates);
-                    }
-                } else {
-                    updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} zarda omad kelmadi. Qamoq muddati: ${turnsLeft} navbat.`;
-                    updates[`rooms/${currentRoomId}/turn`] = rotateNextTurnSequence(room, activeUser.uid);
+            // Jadidlar uchun kartalar bazasi
+            const jadidCards = [
+                {
+                    id: "print_news",
+                    title: "Gazeta Chop Etish",
+                    desc: "Sadoi Turkiston nashri. Ma'rifat darajasini keskin oshiradi.",
+                    effect: "+15% Ma'rifat, +5% Xavf"
+                },
+                {
+                    id: "open_school",
+                    title: "Yashirin Maktab Ochish",
+                    desc: "Yangi usul maktabi asos solish. Ulkan natija beradi.",
+                    effect: "+25% Ma'rifat, +10% Xavf"
+                },
+                {
+                    id: "think_deep",
+                    title: "Tafakkur & Ehtiyotkorlik",
+                    desc: "Chor josuslarining izlarini chalkashtirish va xavfsizlik chorasi.",
+                    effect: "-10% Xavf darajasi"
                 }
-            }
-            hideJailControls();
-            await update(ref(db), updates);
-        });
+            ];
+
+            // Chaqimchi (Josus) uchun kartalar bazasi (Tashqaridan niqoblangan)
+            const spyCards = [
+                {
+                    id: "spy_spill_ink",
+                    title: "Gazeta Chop Etish", // Niqoblangan nom
+                    desc: "Sadoi Turkiston nashri. Ma'rifat darajasini keskin oshiradi.",
+                    effect: "Yashirin ta'sir: -15% Ma'rifat (Buzg'unchilik)"
+                },
+                {
+                    id: "spy_expose",
+                    title: "Yashirin Maktab Ochish", // Niqoblangan nom
+                    desc: "Yangi usul maktabi asos solish. Ulkan natija beradi.",
+                    effect: "Yashirin ta'sir: +20% Xavf (Tahririyatni fosh etish)"
+                },
+                {
+                    id: "spy_fake_think",
+                    title: "Tafakkur & Ehtiyotkorlik", // Niqoblangan nom
+                    desc: "Chor josuslarining izlarini chalkashtirish va xavfsizlik chorasi.",
+                    effect: "Yashirin ta'sir: Hech narsa o'zgarmaydi (+0% neytral)"
+                }
+            ];
+
+            const activeCards = (role === 'spy') ? spyCards : jadidCards;
+
+            activeCards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = `border p-4 flex flex-col justify-between bg-stone-950 transition ${
+                    isMyTurn 
+                    ? 'border-stone-600 hover:border-stone-300 cursor-pointer translate-y-0 hover:-translate-y-1' 
+                    : 'border-stone-850 opacity-50 cursor-not-allowed'
+                }`;
+
+                cardEl.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <h5 class="serif-title font-bold text-stone-200 text-sm">${card.title}</h5>
+                            <span class="text-[9px] font-mono text-stone-500 uppercase border border-stone-800 px-1">Karta</span>
+                        </div>
+                        <p class="text-[11px] text-stone-400 mt-2 leading-relaxed">${card.desc}</p>
+                    </div>
+                    <div class="mt-4 pt-2 border-t border-stone-900 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-stone-400 italic">${card.effect}</span>
+                        ${isMyTurn ? `<span class="text-[10px] font-mono text-stone-200 uppercase font-bold tracking-wider">O'ynash →</span>` : ''}
+                    </div>
+                `;
+
+                if(isMyTurn) {
+                    cardEl.addEventListener('click', () => executePlayerAction(card.id));
+                }
+                container.appendChild(cardEl);
+            });
+        }
 
 
-        // ================= INTERACTIVE INVESTMENT SYSTEM =================
-        document.getElementById('btn-core-buy').addEventListener('click', async () => {
-            SoundFX.play('buy');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
+        /* =========================================================================
+           PART 6: CARD EXECUTION ENGINE (HARAKATLAR TRANSAKTSIYASI)
+           ========================================================================= */
 
-            const player = room.players[activeUser.uid];
-            const pos = player.position;
-            const cell = boardMatrix[pos];
+        async function executePlayerAction(cardId) {
+            if(!currentRoomId) return;
+            const targetRoomRef = ref(db, `jadidlar_rooms/${currentRoomId}`);
 
-            if(player.balance < cell.cost) {
-                triggerToast("Mablag'ingiz yetarli emas!");
-                return;
-            }
+            try {
+                const result = await runTransaction(targetRoomRef, (room) => {
+                    if (!room) return room;
+                    
+                    // Xavfsizlik tekshiruvlari
+                    if(room.status !== 'playing') return room;
+                    const order = room.playerOrder || [];
+                    const currentTurnUid = order[room.currentTurnIndex];
+                    if(currentTurnUid !== currentUser.uid) return room; // Navbat mos emas
 
-            let updates = {};
-            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = player.balance - cell.cost;
-            updates[`rooms/${currentRoomId}/properties/${pos}`] = activeUser.uid;
-            updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} [${cell.name}] ko'chmas mulkini $${cell.cost}ga sotib oldi.`;
-            updates[`rooms/${currentRoomId}/turn`] = rotateNextTurnSequence(room, activeUser.uid);
+                    const actor = room.players[currentUser.uid];
+                    if(!actor || !actor.isAlive) return room;
 
-            hideBuyRequestModal();
-            await update(ref(db), updates);
-        });
+                    // Matematik o'zgarishlar mantiqi
+                    let enlightDiff = 0;
+                    let dangerDiff = 0;
+                    let logMessage = "";
 
-        document.getElementById('btn-core-skip').addEventListener('click', async () => {
-            SoundFX.play('click');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
+                    // JADIDLAR AMALLARI
+                    if(cardId === "print_news") {
+                        enlightDiff = 15;
+                        dangerDiff = 5;
+                        logMessage = `${actor.name} gazeta matbaa mashinasini yurgizdi (+15% Ma'rifat).`;
+                    } else if(cardId === "open_school") {
+                        enlightDiff = 25;
+                        dangerDiff = 10;
+                        logMessage = `${actor.name} chekka qishloqda yashirin maktab ochdi (+25% Ma'rifat).`;
+                    } else if(cardId === "think_deep") {
+                        dangerDiff = -10;
+                        logMessage = `${actor.name} tahririyat xavfsizlik hujjatlarini yangiladi (-10% Xavf).`;
+                    }
+                    
+                    // CHAQIMCHI AMALLARI (Yashirin sabotaj)
+                    else if(cardId === "spy_spill_ink") {
+                        enlightDiff = -15;
+                        logMessage = `${actor.name} gazeta chop etdi (Lekin yashirincha siyoh to'kildi: -15% Ma'rifat).`;
+                    } else if(cardId === "spy_expose") {
+                        dangerDiff = 20;
+                        logMessage = `${actor.name} maktab ochish harakatini boshladi (Lekin maxfiy xizmatga xabar yetdi: +20% Xavf).`;
+                    } else if(cardId === "spy_fake_think") {
+                        logMessage = `${actor.name} xavfsizlik chorasini ko'rdi (Hech qanday o'zgarish bo'lmadi).`;
+                    }
 
-            let updates = {};
-            updates[`rooms/${currentRoomId}/lastActionLog`] = `${room.players[activeUser.uid].email.split('@')[0]} mulkni sotib olishni rad etdi.`;
-            updates[`rooms/${currentRoomId}/turn`] = rotateNextTurnSequence(room, activeUser.uid);
+                    // Statlarni yangilash (0 va 100 chegaralarda tutish)
+                    room.enlightenment = Math.max(0, Math.min(100, room.enlightenment + enlightDiff));
+                    room.danger = Math.max(0, Math.min(100, room.danger + dangerDiff));
 
-            hideBuyRequestModal();
-            await update(ref(db), updates);
-        });
+                    // Navbatni siljitish va tirik o'yinchini topish algoritmi
+                    room.turnCount = room.turnCount + 1;
+                    
+                    // G'alaba shartlarini dastlabki tekshirish
+                    if(room.enlightenment >= 100) {
+                        room.status = "finished";
+                        room.winner = "jadidlar";
+                        return room;
+                    }
+                    if(room.danger >= 100) {
+                        room.status = "finished";
+                        room.winner = "chaqimchi";
+                        return room;
+                    }
 
-        // --- Uylar Qurish Pro-Mantiqi ---
-        document.getElementById('btn-manage-build').addEventListener('click', async () => {
-            SoundFX.play('click');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
-
-            const player = room.players[activeUser.uid];
-            // O'yinchi o'ziga tegishli garovda bo'lmagan eng arzon mulkni topib avtomat bitta uy qo'shadi (SPA optimizatsiya)
-            let builtSomething = false;
-
-            if(room.properties) {
-                for(let i=0; i<16; i++) {
-                    if(room.properties[i] === activeUser.uid) {
-                        const cellData = boardMatrix[i];
-                        const currentHouses = (room.houses && room.houses[i]) ? room.houses[i] : 0;
-                        const isMortgaged = room.mortgaged && room.mortgaged[i];
-
-                        if(currentHouses < 4 && !isMortgaged) {
-                            if(player.balance >= cellData.houseCost) {
-                                let updates = {};
-                                updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = player.balance - cellData.houseCost;
-                                updates[`rooms/${currentRoomId}/houses/${i}`] = currentHouses + 1;
-                                updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} [${cellData.name}]ga uy qurdi (+$${cellData.houseCost}).`;
-                                await update(ref(db), updates);
-                                triggerToast(`${cellData.name}ga infratuzilma qo'shildi!`);
-                                builtSomething = true;
+                    // Har 3 ta jami muvaffaqiyatli yurishdan keyin deduction bosqichiga o'tish
+                    if(room.turnCount >= 3) {
+                        room.status = "deduction";
+                        room.deductionStartTime = Date.now();
+                        room.turnCount = 0; // Faza yangilanishi uchun nolga tushirish
+                        // Hamma tirik o'yinchilarning ovozini tozalash
+                        Object.keys(room.players).forEach(uid => {
+                            room.players[uid].votedFor = "none";
+                        });
+                    } else {
+                        // Navbatni keyingi tirik o'yinchiga uzatish
+                        let nextIndex = room.currentTurnIndex;
+                        let foundAlive = false;
+                        for (let i = 0; i < order.length; i++) {
+                            nextIndex = (nextIndex + 1) % order.length;
+                            if (room.players[order[nextIndex]].isAlive) {
+                                foundAlive = true;
                                 break;
                             }
                         }
-                    }
-                }
-            }
-            if(!builtSomething) triggerToast("Mulklar yo'q, hamma joy to'la yoki pul yetarli emas!");
-        });
-
-        // --- Garovga Qo'yish (Mortgage) Tizimi ---
-        document.getElementById('btn-manage-mortgage').addEventListener('click', async () => {
-            SoundFX.play('click');
-            const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            if(!snap.exists()) return;
-            const room = snap.val();
-
-            const player = room.players[activeUser.uid];
-            let processed = false;
-
-            if(room.properties) {
-                for(let i=0; i<16; i++) {
-                    if(room.properties[i] === activeUser.uid) {
-                        const cellData = boardMatrix[i];
-                        const isMortgaged = room.mortgaged && room.mortgaged[i];
-
-                        // Agar garovda bo'lmasa garovga qo'yib pul oladi, agar garovda bo'lsa qaytarib sotib oladi
-                        let updates = {};
-                        if(!isMortgaged) {
-                            const cashValue = Math.floor(cellData.cost / 2);
-                            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = player.balance + cashValue;
-                            updates[`rooms/${currentRoomId}/mortgaged/${i}`] = true;
-                            updates[`rooms/${currentRoomId}/houses/${i}`] = 0; // Uylar buziladi
-                            updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} [${cellData.name}]ni garovga topshirib, $${cashValue} oldi.`;
-                            triggerToast(`${cellData.name} bankka garovga berildi.`);
-                        } else {
-                            const paybackCost = Math.floor(cellData.cost * 0.6);
-                            if(player.balance < paybackCost) {
-                                triggerToast("Garovdan qaytarishga pul kam!");
-                                return;
-                            }
-                            updates[`rooms/${currentRoomId}/players/${activeUser.uid}/balance`] = player.balance - paybackCost;
-                            updates[`rooms/${currentRoomId}/mortgaged/${i}`] = false;
-                            updates[`rooms/${currentRoomId}/lastActionLog`] = `${player.email.split('@')[0]} [${cellData.name}]ni garovdan qaytarib oldi (-$${paybackCost}).`;
-                            triggerToast(`${cellData.name} erkin aktivga aylandi.`);
+                        if(foundAlive) {
+                            room.currentTurnIndex = nextIndex;
                         }
-                        await update(ref(db), updates);
-                        processed = true;
-                        break;
                     }
-                }
-            }
-            if(!processed) triggerToast("Sizda garovga qo'yiladigan shaxsiy mulk mavjud emas.");
-        });
 
-
-        // ================= SEANSLARNING MUKAMMAL YAKUNI VA FINISH MATRITSA =================
-        function rotateNextTurnSequence(room, currentTurnUid) {
-            const keysOrder = Object.keys(room.players);
-            const initialIndex = keysOrder.indexOf(currentTurnUid);
-
-            for(let i=1; i<=keysOrder.length; i++) {
-                const lookupIdx = (initialIndex + i) % keysOrder.length;
-                const potentialUid = keysOrder[lookupIdx];
-                if(!room.players[potentialUid].isBankrupt) {
-                    return potentialUid;
-                }
-            }
-            return currentTurnUid;
-        }
-
-        function wipeBankruptAssets(room, bankruptUid, currentUpdates) {
-            if(room.properties) {
-                Object.keys(room.properties).forEach(cellIdx => {
-                    if(room.properties[cellIdx] === bankruptUid) {
-                        currentUpdates[`rooms/${currentRoomId}/properties/${cellIdx}`] = null;
-                        currentUpdates[`rooms/${currentRoomId}/houses/${cellIdx}`] = null;
-                        currentUpdates[`rooms/${currentRoomId}/mortgaged/${cellIdx}`] = null;
-                    }
+                    return room;
                 });
+
+                if(result.committed) {
+                    showToast("Harakatingiz muvaffaqiyatli bajarildi!");
+                }
+            } catch(error) {
+                showToast("Harakatni qayta ishlash xatosi", "error");
             }
-            return currentUpdates;
         }
 
-        function pessimistCheckGameOver(room) {
-            const playersArr = Object.values(room.players);
-            const survivors = playersArr.filter(p => !p.isBankrupt);
-            // Agar o'yin boshlangan bo'lsa va faqat 1 ta omon qolgan bo'lsa
-            return (room.status === 'playing' && survivors.length === 1);
+
+        /* =========================================================================
+           PART 7: DEDUCTION PHASE & VOTING (FOSH ETISH VA OVOZ BERISH TIZIMI)
+           ========================================================================= */
+
+        function setupDeductionPhaseUI(room) {
+            // Taymer hisoblash mantiqi (60 soniya)
+            if(deductionTimerInterval) clearInterval(deductionTimerInterval);
+
+            const startTime = room.deductionStartTime || Date.now();
+            const duration = 60; // 60 soniya
+
+            function updateTimer() {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const remaining = Math.max(0, duration - elapsed);
+                document.getElementById('deduction-timer').innerText = remaining;
+
+                // Vaqt tugaganda transaktsiya faqat host yoki har bir o'yinchi tomonidan avtomatik yopishga trigger beradi
+                if(remaining <= 0) {
+                    clearInterval(deductionTimerInterval);
+                    if(room.hostId === currentUser.uid) {
+                        evaluateVotesAutomatically(room.roomId);
+                    }
+                }
+            }
+
+            updateTimer();
+            deductionTimerInterval = setInterval(updateTimer, 1000);
+
+            // Ovoz berish ro'yxatini shakllantirish
+            const voteListContainer = document.getElementById('deduction-vote-list');
+            voteListContainer.innerHTML = '';
+
+            const myData = room.players[currentUser.uid];
+            const hasVoted = myData && myData.votedFor !== 'none';
+
+            if(hasVoted) {
+                const targetName = room.players[myData.votedFor] ? room.players[myData.votedFor].name : "Hech kim";
+                document.getElementById('vote-status-feedback').innerText = `Siz [ ${targetName} ] uchun ovoz berdingiz. Boshqalarni kuting.`;
+            } else if(myData && !myData.isAlive) {
+                document.getElementById('vote-status-feedback').innerText = `Siz surgundasiz. Ovoz bera olmaysiz.`;
+            } else {
+                document.getElementById('vote-status-feedback').innerText = `Siz hali ovoz bermadingiz. Gumondor portretini tanlang.`;
+            }
+
+            Object.values(room.players).forEach(p => {
+                // Surgundagilarga ovoz berib bo'lmaydi
+                if(!p.isAlive) return;
+
+                const btn = document.createElement('button');
+                btn.disabled = hasVoted || (myData && !myData.isAlive) || p.uid === currentUser.uid;
+                btn.className = `border p-2 flex flex-col items-center bg-stone-950 transition ${
+                    btn.disabled 
+                    ? 'border-stone-900 text-stone-600 opacity-60 cursor-not-allowed' 
+                    : 'border-stone-700 hover:border-stone-400 text-stone-200 cursor-pointer'
+                }`;
+
+                // Kim unga ovoz berganini sanash (Realtime vizualizatsiya)
+                let votersCount = 0;
+                Object.values(room.players).forEach(v => {
+                    if(v.votedFor === p.uid) votersCount++;
+                });
+
+                btn.innerHTML = `
+                    <div class="w-12 h-12 border border-stone-800 bg-stone-900 mb-1">
+                        ${generateVintageAvatar(p.name)}
+                    </div>
+                    <span class="text-[11px] font-bold truncate w-full block">${p.name}</span>
+                    <span class="text-[9px] font-mono tracking-widest uppercase text-stone-500 mt-0.5">Ovozlar: ${votersCount}</span>
+                `;
+
+                if(!btn.disabled) {
+                    btn.addEventListener('click', () => submitDeductionVote(p.uid));
+                }
+                voteListContainer.appendChild(btn);
+            });
         }
 
-        function triggerVictorySequence(room) {
-            const survivors = Object.values(room.players).filter(p => !p.isBankrupt);
-            const winnerObj = survivors[0] || { email: "Noma'lum Chempion" };
-
-            document.getElementById('core-state-neutral').classList.add('hidden');
-            hideBuyRequestModal();
-            hideJailControls();
-
-            document.getElementById('core-state-victory').classList.remove('hidden');
-            document.getElementById('core-state-victory').classList.add('flex');
-            document.getElementById('lbl-victory-winner').innerText = `G'olib: ${winnerObj.email}`;
-            document.getElementById('btn-game-roll').disabled = true;
-        }
-
-        document.getElementById('btn-victory-terminate').addEventListener('click', async () => {
+        // OVOZNI FIREBASE'GA JO'NATISH
+        async function submitDeductionVote(targetUid) {
             if(!currentRoomId) return;
-            const rId = currentRoomId;
-            if(databaseListenerRef) databaseListenerRef();
-            currentRoomId = null;
+            const voteRef = ref(db, `jadidlar_rooms/${currentRoomId}/players/${currentUser.uid}/votedFor`);
+            try {
+                await set(voteRef, targetUid);
+                showToast("Ovozingiz muhrlandi.");
+            } catch(error) {
+                showToast("Ovoz berishda xatolik", "error");
+            }
+        }
+
+        // OVOZLARNI HISOBLASH (AVTOMATIK YOKI VAQT TUGAGANDA MULTI-PLAYER EVALUATION)
+        async function evaluateVotesAutomatically(roomId) {
+            const targetRoomRef = ref(db, `jadidlar_rooms/${roomId}`);
 
             try {
-                await remove(ref(db, `rooms/${rId}`));
-            } catch(e) { console.log(e); }
+                await runTransaction(targetRoomRef, (room) => {
+                    if (!room || room.status !== 'deduction') return room;
 
-            document.getElementById('core-state-victory').classList.remove('flex');
-            document.getElementById('core-state-victory').classList.add('hidden');
-            navigateToScreen('view-lobby');
+                    const alivePlayers = Object.values(room.players).filter(p => p.isAlive);
+                    
+                    // Ovozlar xaritasi yaratish
+                    const voteCounts = {};
+                    alivePlayers.forEach(p => {
+                        if(p.votedFor && p.votedFor !== 'none') {
+                            voteCounts[p.votedFor] = (voteCounts[p.votedFor] || 0) + 1;
+                        }
+                    });
+
+                    // Eng ko'p ovoz olgan shaxsni aniqlash
+                    let maxVotes = 0;
+                    let suspectUid = null;
+                    let isTie = false;
+
+                    Object.keys(voteCounts).forEach(uid => {
+                        if(voteCounts[uid] > maxVotes) {
+                            maxVotes = voteCounts[uid];
+                            suspectUid = uid;
+                            isTie = false;
+                        } else if(voteCounts[uid] === maxVotes) {
+                            isTie = true;
+                        }
+                    });
+
+                    // Durang bo'lmasa va kimdir ovoz olgan bo'lsa uni surgun qilish
+                    if(suspectUid && !isTie) {
+                        room.players[suspectUid].isAlive = false;
+                        const targetedPlayer = room.players[suspectUid];
+
+                        // O'yin tugash shartlarini tekshirish
+                        if(targetedPlayer.role === 'spy') {
+                            // Chaqimchi ushlandi -> Jadidlar yutdi
+                            room.status = "finished";
+                            room.winner = "jadidlar";
+                            return room;
+                        } else {
+                            // Begunoh jadid ketdi -> Josus tirik bo'lsa va tirik jadidlar soni 1 taga tushib qolsa josus yutadi
+                            const remainingJadids = Object.values(room.players).filter(p => p.isAlive && p.role === 'jadid');
+                            if(remainingJadids.length <= 1) {
+                                room.status = "finished";
+                                room.winner = "chaqimchi";
+                                return room;
+                            }
+                        }
+                    }
+
+                    // Agar o'yin tugamagan bo'lsa, navbat tartibini qayta hisoblab "playing" holatiga qaytarish
+                    room.status = "playing";
+                    room.turnCount = 0;
+
+                    // Navbatni tirik bo'lgan birinchi o'yinchiga o'tkazish
+                    const order = room.playerOrder || [];
+                    let nextIndex = 0;
+                    for(let i=0; i<order.length; i++) {
+                        if(room.players[order[i]].isAlive) {
+                            nextIndex = i;
+                            break;
+                        }
+                    }
+                    room.currentTurnIndex = nextIndex;
+
+                    return room;
+                });
+            } catch(error) {
+                // Transaktsiya xatolarini boshqarish
+            }
+        }
+
+
+        /* =========================================================================
+           PART 8: REALTIME CHAT SYSTEM (MATBAA MUZOKARALARI KUNDALIGI)
+           ========================================================================= */
+
+        let chatMessagesRef = null;
+
+        function initChatSystem(roomId) {
+            const chatContainer = document.getElementById('chat-messages-container');
+            chatContainer.innerHTML = ''; // Tozalash
+
+            if(chatMessagesRef) off(chatMessagesRef);
+            chatMessagesRef = ref(db, `jadidlar_rooms/${roomId}/chat`);
+
+            onValue(chatMessagesRef, (snapshot) => {
+                chatContainer.innerHTML = '';
+                const data = snapshot.val();
+                if(!data) return;
+
+                Object.values(data).forEach(msg => {
+                    const msgEl = document.createElement('div');
+                    if(msg.senderId === 'system') {
+                        msgEl.className = "text-stone-500 italic text-center border-y border-stone-900 py-1 my-1";
+                        msgEl.innerText = msg.text;
+                    } else {
+                        msgEl.className = "p-1.5 border border-stone-900 bg-stone-950/40";
+                        msgEl.innerHTML = `<span class="text-stone-400 font-bold">${msg.senderName}:</span> <span class="text-stone-300">${msg.text}</span>`;
+                    }
+                    chatContainer.appendChild(msgEl);
+                });
+                // Avtomatik pastga tushirish
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+
+        // CHAT XABARINI YUBORISH
+        document.getElementById('btn-send-chat').addEventListener('click', () => executeChatSend());
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') executeChatSend();
         });
 
+        async function executeChatSend() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text || !currentRoomId) return;
+
+            const messageRef = push(ref(db, `jadidlar_rooms/${currentRoomId}/chat`));
+            const msgData = {
+                senderId: currentUser.uid,
+                senderName: currentUser.displayName || "Noma'lum Ziyoli",
+                text: text,
+                timestamp: Date.now()
+            };
+
+            try {
+                await set(messageRef, msgData);
+                input.value = '';
+            } catch(error) {
+                showToast("Xabar yuborilmadi", "error");
+            }
+        }
+
+        async function sendSystemChatMessage(roomId, systemText) {
+            const sysMessageRef = push(ref(db, `jadidlar_rooms/${roomId}/chat`));
+            await set(sysMessageRef, {
+                senderId: "system",
+                senderName: "TIZIM",
+                text: systemText,
+                timestamp: Date.now()
+            });
+        }
+
+
+        /* =========================================================================
+           PART 9: GAME OVER MANTIQLARI (YAKUN VA TOZALASH)
+           ========================================================================= */
+
+        function triggerGameOverModal(room) {
+            const modal = document.getElementById('game-over-modal');
+            const title = document.getElementById('go-title');
+            const desc = document.getElementById('go-description');
+
+            modal.classList.remove('hidden');
+
+            if(room.winner === 'jadidlar') {
+                title.innerText = "Ma'rifat G'alaba Qozondi!";
+                title.className = "serif-title text-3xl font-bold uppercase tracking-tight text-stone-200 mt-2";
+                desc.innerText = "Millat yoshlari ziyoli bo'ldi, matbaa saqlab qolindi va ma'rifat darajasi 100% ga yetdi. Chaqimchilar mag'lub bo'ldi.";
+            } else if(room.winner === 'chaqimchi') {
+                title.innerText = "Tahririyat Fosh Bo'ldi!";
+                title.className = "serif-title text-3xl font-bold uppercase tracking-tight text-red-400 mt-2";
+                desc.innerText = "Chor maxfiy politsiyasi matbaani batamom yo'q qildi, jadidlar hibsga olindi. Chaqimchi (Josus) o'z maqsadiga yetdi.";
+            }
+        }
+
+        // LOBBYGA QAYTISh VA XONANI TOZALASH
+        document.getElementById('btn-go-close').addEventListener('click', async () => {
+            const rId = currentRoomId;
+            document.getElementById('game-over-modal').classList.add('hidden');
+            
+            detachRoomListener();
+            currentRoomId = null;
+            showScreen('lobby');
+            initLobbyRooms();
+
+            // Xonani butkul tozalash faqat host zimmasida bo'ladi
+            if(roomDataDestroyerCondition(rId)) {
+                try {
+                    await remove(ref(db, `jadidlar_rooms/${rId}`));
+                } catch(e) { /* Xona allaqachon o'chirilgan */ }
+            }
+        });
+
+        function roomDataDestroyerCondition(rId) {
+            if(currentRoomData && currentRoomData.hostId === currentUser.uid) {
+                return true;
+            }
+            return false;
+        }
     </script>
 </body>
 </html>
